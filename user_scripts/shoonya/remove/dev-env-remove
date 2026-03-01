@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Shoonya OS · Dev Environment Remover
+# fzf-based multi-select TUI
+
+# ---------- helpers ----------
+
+ensure_mise() {
+  if command -v mise >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "mise not found. Nothing to remove."
+  exit 0
+}
+
+remove_php() {
+  sudo pacman -Rns --noconfirm php composer php-sqlite xdebug 2>/dev/null || true
+}
+
+# ---------- dev env catalog ----------
+# key|Title|Description
+
+DEV_ENVS=$(
+  cat <<'EOF'
+python|Python|Python via mise
+node|Node.js|Node.js runtime
+bun|Bun|Bun runtime
+deno|Deno|Deno runtime
+go|Go|Go toolchain
+ruby|Ruby|Ruby + gems
+php|PHP|PHP + Composer
+laravel|Laravel|Laravel installer
+symfony|Symfony|Symfony CLI
+elixir|Elixir|Elixir + Erlang
+phoenix|Phoenix|Phoenix framework
+rust|Rust|Rust toolchain
+java|Java|Java SDK
+zig|Zig|Zig compiler + ZLS
+ocaml|OCaml|OCaml + opam
+dotnet|Dotnet|.NET SDK
+clojure|Clojure|Clojure runtime
+EOF
+)
+
+# ---------- fzf UI ----------
+
+fzf_args=(
+  --multi
+  --delimiter='|'
+  --with-nth=2
+  --preview 'echo {3}'
+  --preview-label='Description'
+  --preview-window 'down:60%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-j:preview-down,alt-k:preview-up'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --color 'pointer:red,marker:red'
+  --prompt 'Remove Dev Environments > '
+)
+
+selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}")
+
+[[ -z "$selection" ]] && exit 0
+
+# ---------- removal loop ----------
+
+echo "$selection" | while IFS='|' read -r key _ _; do
+  echo
+  echo "▶ Removing: $key"
+  echo
+
+  case "$key" in
+    ruby)
+      ensure_mise
+      mise uninstall ruby --all
+      mise rm -g ruby
+      rm -f ~/.gemrc
+      ;;
+    node)
+      ensure_mise
+      mise uninstall node --all
+      mise rm -g node
+      ;;
+    bun)
+      ensure_mise
+      mise uninstall bun --all
+      mise rm -g bun
+      ;;
+    deno)
+      ensure_mise
+      mise uninstall deno --all
+      mise rm -g deno
+      ;;
+    go)
+      ensure_mise
+      mise uninstall go --all
+      mise rm -g go
+      ;;
+    php)
+      remove_php
+      ;;
+    laravel)
+      composer global remove laravel/installer 2>/dev/null || true
+      ;;
+    symfony)
+      sudo pacman -Rns --noconfirm symfony-cli 2>/dev/null || true
+      ;;
+    python)
+      ensure_mise
+      mise uninstall python --all
+      mise rm -g python
+      rm -rf ~/.local/bin/uv ~/.local/bin/uvx ~/.cargo/bin/uv 2>/dev/null || true
+      ;;
+    elixir|phoenix)
+      ensure_mise
+      mise uninstall elixir --all
+      mise uninstall erlang --all
+      mise rm -g elixir
+      mise rm -g erlang
+      ;;
+    zig)
+      ensure_mise
+      mise uninstall zig --all
+      mise uninstall zls --all
+      mise rm -g zig
+      mise rm -g zls
+      ;;
+    rust)
+      rustup self uninstall -y 2>/dev/null || true
+      ;;
+    java)
+      ensure_mise
+      mise uninstall java --all
+      mise rm -g java
+      ;;
+    dotnet)
+      ensure_mise
+      mise uninstall dotnet --all
+      mise rm -g dotnet
+      ;;
+    ocaml)
+      opam switch remove default -y 2>/dev/null || true
+      rm -rf ~/.opam 2>/dev/null || true
+      sudo rm -f /usr/local/bin/opam 2>/dev/null || true
+      ;;
+    clojure)
+      ensure_mise
+      mise uninstall clojure --all
+      mise rm -g clojure
+      ;;
+  esac
+done
+
+echo
+echo "✔ Selected environments removed."
+echo
+echo "Done."
+echo "Press Enter or Esc to close."
+
+while true; do
+  read -rsn1 key
+  [[ $key == "" || $key == $'\e' ]] && break
+done

@@ -1,0 +1,4 @@
+configs/matugen/generated/
+*.bak
+*.log
+.cache/

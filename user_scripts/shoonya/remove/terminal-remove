@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Shoonya OS · Remove Terminal
+
+TERMINALS=$(
+  cat <<'EOF'
+kitty|Kitty|Remove Kitty terminal
+alacritty|Alacritty|Remove Alacritty terminal
+ghostty|Ghostty|Remove Ghostty terminal
+EOF
+)
+
+fzf_args=(
+  --delimiter='|'
+  --with-nth=2
+  --preview 'echo {3}'
+  --preview-label='Description'
+  --preview-window 'down:50%:wrap'
+  --color 'pointer:red,marker:red'
+  --prompt 'Remove Terminal > '
+)
+
+selection=$(echo "$TERMINALS" | fzf "${fzf_args[@]}")
+
+[[ -z "$selection" ]] && exit 0
+
+IFS='|' read -r package _ _ <<<"$selection"
+
+case "$package" in
+  kitty)     desktop_id="kitty.desktop" ;;
+  alacritty) desktop_id="Alacritty.desktop" ;;
+  ghostty)   desktop_id="com.mitchellh.ghostty.desktop" ;;
+esac
+
+echo
+echo "▶ Removing $package..."
+echo
+
+sudo pacman -Rns --noconfirm "$package" 2>/dev/null || true
+
+if [[ "$package" == "alacritty" ]]; then
+  rm -f ~/.local/share/applications/Alacritty.desktop
+fi
+
+if [[ -f ~/.config/xdg-terminals.list ]] &&
+   grep -q "$desktop_id" ~/.config/xdg-terminals.list; then
+  rm -f ~/.config/xdg-terminals.list
+fi
+
+echo
+echo "✔ Terminal removed."
+echo
+echo "Press Enter or Esc to close."
+
+while read -rsn1 key; do
+  [[ $key == "" || $key == $'\e' ]] && break
+done

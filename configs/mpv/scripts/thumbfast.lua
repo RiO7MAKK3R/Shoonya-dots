@@ -1,0 +1,1 @@
+/home/shoonya/.config/mpv/scripts/thumbfast_repo/thumbfast.lua

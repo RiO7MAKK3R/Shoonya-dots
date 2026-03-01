@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Shoonya OS · Dev Environment Installer
+# fzf-based multi-select TUI
+
+# ---------- helpers ----------
+
+ensure_mise() {
+  if command -v mise >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "mise not found. Installing mise..."
+  curl -fsSL https://mise.jdx.dev/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+
+  command -v mise >/dev/null 2>&1 || {
+    echo "❌ mise installation failed"
+    exit 1
+  }
+}
+
+install_php() {
+  sudo pacman -S php composer php-sqlite xdebug --noconfirm
+}
+
+install_node() {
+  ensure_mise
+  mise use --global node@latest
+}
+
+# ---------- dev env catalog ----------
+
+# Format:
+# key|Title|Description
+DEV_ENVS=$(
+  cat <<'EOF'
+python|Python|Python (latest) via mise + uv package manager
+node|Node.js|Node.js runtime (LTS) via mise
+bun|Bun|Bun JavaScript runtime via mise
+deno|Deno|Deno runtime via mise
+go|Go|Go compiler + toolchain via mise
+ruby|Ruby|Ruby + Rails via mise
+php|PHP|PHP + Composer via pacman
+laravel|Laravel|PHP + Node + Laravel installer
+symfony|Symfony|PHP + Symfony CLI
+elixir|Elixir|Elixir + Erlang via mise
+phoenix|Phoenix|Elixir + Phoenix framework
+rust|Rust|Rust toolchain via rustup
+java|Java|Java (latest) via mise
+zig|Zig|Zig compiler + ZLS via mise
+ocaml|OCaml|OCaml + opam toolchain
+dotnet|Dotnet|.NET SDK via mise
+clojure|Clojure|Clojure via mise
+EOF
+)
+
+# ---------- fzf UI ----------
+
+fzf_args=(
+  --multi
+  --delimiter='|'
+  --with-nth=2
+  --preview 'echo {3}'
+  --preview-label='Description'
+  --preview-window 'down:60%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-j:preview-down,alt-k:preview-up'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --color 'pointer:green,marker:green'
+  --prompt 'Dev Environments > '
+)
+
+selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}")
+
+[[ -z "$selection" ]] && exit 0
+
+# ---------- install loop ----------
+
+echo "$selection" | while IFS='|' read -r key _ _; do
+  echo
+  echo "▶ Installing: $key"
+  echo
+
+  case "$key" in
+    python)
+      ensure_mise
+      mise use --global python@latest
+      curl -fsSL https://astral.sh/uv/install.sh | sh
+      ;;
+    node)
+      install_node
+      ;;
+    bun)
+      ensure_mise
+      mise use --global bun@latest
+      ;;
+    deno)
+      ensure_mise
+      mise use --global deno@latest
+      ;;
+    go)
+      ensure_mise
+      mise use --global go@latest
+      ;;
+    ruby)
+      ensure_mise
+      omarchy-pkg-add libyaml
+      mise use --global ruby@latest
+      mise x ruby -- gem install rails --no-document
+      ;;
+    php)
+      install_php
+      ;;
+    laravel)
+      install_php
+      install_node
+      composer global require laravel/installer
+      ;;
+    symfony)
+      install_php
+      omarchy-pkg-add symfony-cli
+      ;;
+    elixir)
+      ensure_mise
+      mise use --global erlang@latest
+      mise use --global elixir@latest
+      mise x elixir -- mix local.hex --force
+      ;;
+    phoenix)
+      ensure_mise
+      mise use --global erlang@latest
+      mise use --global elixir@latest
+      mise x elixir -- mix archive.install hex phx_new --force
+      ;;
+    rust)
+      bash -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+      ;;
+    java)
+      ensure_mise
+      mise use --global java@latest
+      ;;
+    zig)
+      ensure_mise
+      mise use --global zig@latest
+      mise use --global zls@latest
+      ;;
+    ocaml)
+      bash -c "$(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
+      opam init --yes
+      eval "$(opam env)"
+      opam install ocaml-lsp-server odoc ocamlformat utop --yes
+      ;;
+    dotnet)
+      ensure_mise
+      mise use --global dotnet@latest
+      ;;
+    clojure)
+      ensure_mise
+      omarchy-pkg-add rlwrap
+      mise use --global clojure@latest
+      ;;
+  esac
+done
+
+omarchy-show-done
+echo
+echo "Done."
+echo "Press Enter or Esc to close."
+
+while true; do
+  read -rsn1 key
+  [[ $key == "" || $key == $'\e' ]] && break
+done
