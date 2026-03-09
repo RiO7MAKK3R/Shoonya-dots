@@ -76,7 +76,8 @@ open_editor() {
 
 show_main_menu() {
     local selection
-    selection=$(menu "Main" "🔍  Search Notes\n󰀻  Apps\n󰧑  Learn/Help\n󱚤  Install\n󱚧  Remove\n󱓞  Utils\n󱚤  AI & Voice\n󰹑  Visuals & Display\n󰇅  System & Drives\n󱐋  Performance\n󰂄  Power & Battery\n󰛳  Networking\n  Configs\n󰐉  Power")
+    # selection=$(menu "Main" "🔍 Search Notes\n󰀻  Apps\n󰧑  Learn/Help\n󱚤  Install\n󱚧  Remove\n󰚰  Update\n󱓞  Utils\n󱚤  AI & Voice\n󰹑  Visuals & Display\n󰇅  System & Drives\n󱐋  Performance\n󰂄  Power & Battery\n󰛳  Networking\n  Configs\n󰐉  Power")
+    selection=$(menu "Main" "🔍 Search Notes\n󰀻  Apps\n󰧑  Learn/Help\n󱓞  Utils\n󱚤  AI & Voice\n󰹑  Visuals & Display\n  Configs\n󰐉  Power")
     
     route_selection "$selection"
 }
@@ -88,15 +89,15 @@ route_selection() {
         *search*)      perform_global_search ;;
         *apps*)        run_app rofi -show drun -run-command "uwsm app -- {cmd}" ;; 
         *learn*)       show_learn_menu ;;
-        *install*)     show_install_menu ;;
-        *remove*)      show_remove_menu ;;
+        # *install*)     show_install_menu ;;
+        # *remove*)      show_remove_menu ;;
         *utils*)       show_utils_menu ;;
         *ai*)          show_ai_menu ;;
         *visuals*)     show_visuals_menu ;;
-        *system*)      show_system_menu ;;
-        *performance*) show_performance_menu ;;
-        *battery*)     show_power_battery_menu ;;
-        *network*)     show_networking_menu ;;
+        # *system*)      show_system_menu ;;
+        # *performance*) show_performance_menu ;;
+        # *battery*)     show_power_battery_menu ;;
+        # *network*)     show_networking_menu ;;
         *configs*)     show_config_menu ;;
         *power*)       run_app rofi -show power-menu -modi "power-menu:$SCRIPTS_DIR/rofi/powermenu.sh" ;;
         *)             exit 0 ;;
@@ -176,54 +177,56 @@ show_ai_menu() {
         *) show_main_menu ;;
     esac
 }
-show_install_menu() {
-    local choice
-    choice=$(menu "Install" "󰊴  Languages
-󰊴  Packages
-󰊴  Webapps
-󰊴  Editors
-󰊴  Terminals
-󰊴  AI Tools
-󰊴  CLI Tools
-󰊴  TUI Tools
-󰊴  Dev Tools")
+# show_install_menu() {
+#     local choice
+#     choice=$(menu "Install" "AUR
+# Packages
+# Webapps
+# Editors
+# Terminals
+# AI Tools
+# CLI Tools
+# TUI Tools
+# Dev Tools")
 
-    case "${choice,,}" in
-        *languages*)  run_term "install_languages" "$SCRIPTS_DIR/shoonya/install/dev-env-install" ;;
-        *packages*)   run_term "install_packages" "$SCRIPTS_DIR/shoonya/install/pkg-install" ;;
-        *webapps*)   run_term "install_webapps" "$SCRIPTS_DIR/shoonya/install/webapp-install" ;;
-        *editors*)    run_term "install_editors" "$SCRIPTS_DIR/install/install_editors.sh" ;;
-        *terminals*)  run_term "install_terminals" "$SCRIPTS_DIR/shoonya/install/terminal-install" ;;
-        *ai*)         run_term "install_ai" "$SCRIPTS_DIR/install/install_ai.sh" ;;
-        *cli*)        run_term "install_cli" "$SCRIPTS_DIR/install/install_cli.sh" ;;
-        *dev*)        run_term "install_dev" "$SCRIPTS_DIR/install/install_dev.sh" ;;
-        *)            show_main_menu ;;
-    esac
-}
-show_remove_menu() {
-    local choice
-    choice=$(menu "Remove" "󰊴  Languages
-󰊴  Packages
-󰊴  Webapps
-󰊴  Editors
-󰊴  Terminals
-󰊴  AI Tools
-󰊴  CLI Tools
-󰊴  TUI Tools
-󰊴  Dev Tools")
+#     case "${choice,,}" in
+#         *aur*)  run_term "install_languages" "$SCRIPTS_DIR/shoonya/install/aur-install" ;;
+#         *packages*)   run_term "install_packages" "$SCRIPTS_DIR/shoonya/install/pkg-install" ;;
+#         *webapps*)   run_term "install_webapps" "$SCRIPTS_DIR/shoonya/install/webapp-install" ;;
+#         *editors*)    run_term "install_editors" "$SCRIPTS_DIR/shoonya/install/install_editors.sh" ;;
+#         *terminals*)  run_term "install_terminals" "$SCRIPTS_DIR/shoonya/install/terminal-install" ;;
+#         *ai*)         run_term "install_ai" "$SCRIPTS_DIR/shoonya/install/install_ai.sh" ;;
+#         *cli*)        run_term "install_cli" "$SCRIPTS_DIR/shoonya/install/install_cli.sh" ;;
+#         *tui*)        run_term "install_tui" "$SCRIPTS_DIR/shoonya/install/install_tui.sh" ;;
+#         *dev*)        run_term "install_dev" "$SCRIPTS_DIR/shoonya/install/dev-env-install" ;;
+#         *)            show_main_menu ;;
+#     esac
+# }
+# show_remove_menu() {
+#     local choice
+#     choice=$(menu "Remove" "AUR
+# Packages
+# Webapps
+# Editors
+# Terminals
+# AI Tools
+# CLI Tools
+# TUI Tools
+# Dev Tools")
 
-    case "${choice,,}" in
-        *languages*)  run_term "remove_languages" "$SCRIPTS_DIR/shoonya/remove/dev-env-remove" ;;
-        *packages*)  run_term "remove_packages" "$SCRIPTS_DIR/shoonya/remove/pkg-remove" ;;
-        *webapps*)  run_term "remove_webapps" "$SCRIPTS_DIR/shoonya/remove/webapp-remove" ;;
-        *editors*)    run_term "remove_editors" "$SCRIPTS_DIR/shoonya/remove_editors.sh" ;;
-        *terminals*)  run_term "remove_terminals" "$SCRIPTS_DIR/shoonya/remove/terminal-remove" ;;
-        *ai*)         run_term "remove_ai" "$SCRIPTS_DIR/shoonya/remove_ai.sh" ;;
-        *cli*)        run_term "remove_cli" "$SCRIPTS_DIR/shoonya/remove_cli.sh" ;;
-        *dev*)        run_term "remove_dev" "$SCRIPTS_DIR/shoonya/remove_dev.sh" ;;
-        *)            show_main_menu ;;
-    esac
-}
+#     case "${choice,,}" in
+#         *aur*)  run_term "remove_languages" "$SCRIPTS_DIR/shoonya/remove/aur-remove" ;;
+#         *packages*)   run_term "remove_packages" "$SCRIPTS_DIR/shoonya/remove/pkg-remove" ;;
+#         *webapps*)   run_term "remove_webapps" "$SCRIPTS_DIR/shoonya/remove/webapp-remove" ;;
+#         *editors*)    run_term "remove_editors" "$SCRIPTS_DIR/shoonya/remove/remove_editors.sh" ;;
+#         *terminals*)  run_term "remove_terminals" "$SCRIPTS_DIR/shoonya/remove/terminal-remove" ;;
+#         *ai*)         run_term "remove_ai" "$SCRIPTS_DIR/shoonya/remove/remvoe_ai.sh" ;;
+#         *cli*)        run_term "remove_cli" "$SCRIPTS_DIR/shoonya/remove/remove_cli.sh" ;;
+#         *tui*)        run_term "remove_tui" "$SCRIPTS_DIR/shoonya/remove/remove_tui.sh" ;;
+#         *dev*)        run_term "remove_dev" "$SCRIPTS_DIR/shoonya/remove/dev-env-remove" ;;
+#         *)            show_main_menu ;;
+#     esac
+# }
 
 
 show_utils_menu() {
@@ -273,54 +276,54 @@ show_visuals_menu() {
     esac
 }
 
-show_system_menu() {
-    local choice
-    choice=$(menu "System & Drives" "  Fastfetch\n󰋊  Dysk (Disk Space)\n󱂵  Disk IO Monitor\n󰗮  BTRFS Compression Stats")
+# show_system_menu() {
+#     local choice
+#     choice=$(menu "System & Drives" "  Fastfetch\n󰋊  Dysk (Disk Space)\n󱂵  Disk IO Monitor\n󰗮  BTRFS Compression Stats")
 
-    case "${choice,,}" in
-        *fastfetch*) run_term_hold "fastfetch" fastfetch ;;
-        *dysk*)      run_term_hold "dysk" dysk ;;
-        *io*)        run_term "io_monitor.sh" "$SCRIPTS_DIR/drives/io_monitor.sh" ;;
-        *btrfs*)     run_term_hold "btrfs_zstd_compression_stats.sh" "$SCRIPTS_DIR/drives/btrfs_zstd_compression_stats.sh" ;;
-        *)           show_main_menu ;;
-    esac
-}
+#     case "${choice,,}" in
+#         *fastfetch*) run_term_hold "fastfetch" fastfetch ;;
+#         *dysk*)      run_term_hold "dysk" dysk ;;
+#         *io*)        run_term "io_monitor.sh" "$SCRIPTS_DIR/drives/io_monitor.sh" ;;
+#         *btrfs*)     run_term_hold "btrfs_zstd_compression_stats.sh" "$SCRIPTS_DIR/drives/btrfs_zstd_compression_stats.sh" ;;
+#         *)           show_main_menu ;;
+#     esac
+# }
 
-show_performance_menu() {
-    local choice
-    choice=$(menu "Performance" "󰓅  Sysbench Benchmark\n󰃢  Cache Purge\n󰿅  Process Terminator")
+# show_performance_menu() {
+#     local choice
+#     choice=$(menu "Performance" "󰓅  Sysbench Benchmark\n󰃢  Cache Purge\n󰿅  Process Terminator")
 
-    case "${choice,,}" in
-        *sysbench*)    run_term_hold "sysbench_benchmark.sh" "$SCRIPTS_DIR/performance/sysbench_benchmark.sh" ;;
-        *cache*)       run_term_hold "cache_purge.sh" "$SCRIPTS_DIR/desktop_apps/cache_purge.sh" ;;
-        *process*|*terminator*) run_term_hold "performance.sh" "$SCRIPTS_DIR/performance/services_and_process_terminator.sh" ;;
-        *)             show_main_menu ;;
-    esac
-}
+#     case "${choice,,}" in
+#         *sysbench*)    run_term_hold "sysbench_benchmark.sh" "$SCRIPTS_DIR/performance/sysbench_benchmark.sh" ;;
+#         *cache*)       run_term_hold "cache_purge.sh" "$SCRIPTS_DIR/desktop_apps/cache_purge.sh" ;;
+#         *process*|*terminator*) run_term_hold "performance.sh" "$SCRIPTS_DIR/performance/services_and_process_terminator.sh" ;;
+#         *)             show_main_menu ;;
+#     esac
+# }
 
-show_power_battery_menu() {
-    local choice
-    choice=$(menu "Power & Battery" "󰶐  Hypridle Timeout\n󰂄  Battery Notification Config\n  Power Saver Mode")
+# show_power_battery_menu() {
+#     local choice
+#     choice=$(menu "Power & Battery" "󰶐  Hypridle Timeout\n󰂄  Battery Notification Config\n  Power Saver Mode")
 
-    case "${choice,,}" in
-        *hypridle*|*timeout*) run_term "timeout.sh" "$SCRIPTS_DIR/hypridle/timeout.sh" ;;
-        *notification*)       run_term "config_bat_notify.sh" "$SCRIPTS_DIR/battery/notify/config_bat_notify.sh" ;;
-        *saver*)              run_term_hold "power_saver.sh" "$SCRIPTS_DIR/battery/power_saver.sh" ;;
-        *)                    show_main_menu ;;
-    esac
-}
+#     case "${choice,,}" in
+#         *hypridle*|*timeout*) run_term "timeout.sh" "$SCRIPTS_DIR/hypridle/timeout.sh" ;;
+#         *notification*)       run_term "config_bat_notify.sh" "$SCRIPTS_DIR/battery/notify/config_bat_notify.sh" ;;
+#         *saver*)              run_term_hold "power_saver.sh" "$SCRIPTS_DIR/battery/power_saver.sh" ;;
+#         *)                    show_main_menu ;;
+#     esac
+# }
 
-show_networking_menu() {
-    local choice
-    choice=$(menu "Networking" "󰖂  Warp VPN Toggle\n󰣀  OpenSSH Setup\n󰖩  WiFi Testing (Airmon)")
+# show_networking_menu() {
+#     local choice
+#     choice=$(menu "Networking" "󰖂  Warp VPN Toggle\n󰣀  OpenSSH Setup\n󰖩  WiFi Testing (Airmon)")
 
-    case "${choice,,}" in
-        *warp*)   run_app "$SCRIPTS_DIR/networking/warp_toggle.sh" ;;
-        *ssh*)    run_term_hold "wifi_testing" sudo "$SCRIPTS_DIR/networking/02_openssh_setup.sh" ;;
-        *wifi*|*airmon*) run_term_hold "wifi_testing" sudo "$SCRIPTS_DIR/networking/ax201_wifi_testing.sh" ;;
-        *)        show_main_menu ;;
-    esac
-}
+#     case "${choice,,}" in
+#         *warp*)   run_app "$SCRIPTS_DIR/networking/warp_toggle.sh" ;;
+#         *ssh*)    run_term_hold "wifi_testing" sudo "$SCRIPTS_DIR/networking/02_openssh_setup.sh" ;;
+#         *wifi*|*airmon*) run_term_hold "wifi_testing" sudo "$SCRIPTS_DIR/networking/ax201_wifi_testing.sh" ;;
+#         *)        show_main_menu ;;
+#     esac
+# }
 
 show_config_menu() {
     local choice

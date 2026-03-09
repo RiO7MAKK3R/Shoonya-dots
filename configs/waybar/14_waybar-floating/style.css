@@ -1,0 +1,100 @@
+/* @import "../omarchy/current/theme/waybar.css"; */
+@import url("../../.config/matugen/generated/waybar-colors.css");
+
+/* * {
+  background-color: @background;
+  color: @foreground;
+
+  border: none;
+  min-height: 0;
+  margin: 0 0 0 0;
+  font-family: 'CaskaydiaMono Nerd Font';
+  font-size: 12px;
+}
+
+#waybar {
+  background: rgba(6, 6, 48, 0.246);
+  border: 2px solid rgba(100, 149, 255, 0.694);  👈 border color + width
+  border-radius: 20px;
+  padding: 2px 2px;
+  box-shadow: 0 0 20px rgb(206, 211, 255);
+} */
+
+* {
+  border: none;
+  border-radius: 40px;
+  color: alpha(@primary, 1);
+  min-height: 0px;
+  font-family: "JetBrainsMono Nerd Font Propo", "Symbols Nerd Font", sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+/* window#waybar {
+  background: @background;
+} */
+window#waybar {
+  background: alpha(@shadow, 0.6);
+}
+
+.modules-left {
+  margin-left: 4px;
+}
+
+.modules-right {
+  margin-right: 8px;
+}
+
+#workspaces button {
+all: initial;
+padding: 0 3px;
+margin: 2 1px;
+min-width: 6px;
+}
+
+#workspaces button.empty {
+opacity: 0.5;
+}
+
+#tray,
+#cpu,
+#battery,
+#network,
+#bluetooth,
+#pulseaudio,
+#custom-launcher,
+#custom-power {
+margin: 0 5px;
+min-width: 6px;
+}
+
+#custom-expand-icon {
+margin-right: 2px;
+}
+
+tooltip {
+  padding: 2px;
+}
+/* 
+#custom-update {
+font-size: 10px;
+} */
+
+#clock {
+margin-left: 0px;
+}
+
+/* .hidden {
+  opacity: 0;
+
+} */
+.tray-group-item.hidden {
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.tray-group-item {
+  transition: all 0.25s ease;
+}
