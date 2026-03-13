@@ -77,7 +77,7 @@ open_editor() {
 show_main_menu() {
     local selection
     # selection=$(menu "Main" "🔍 Search Notes\n󰀻  Apps\n󰧑  Learn/Help\n󱚤  Install\n󱚧  Remove\n󰚰  Update\n󱓞  Utils\n󱚤  AI & Voice\n󰹑  Visuals & Display\n󰇅  System & Drives\n󱐋  Performance\n󰂄  Power & Battery\n󰛳  Networking\n  Configs\n󰐉  Power")
-    selection=$(menu "Main" "🔍 Search Notes\n󰀻  Apps\n󰧑  Learn/Help\n󱓞  Utils\n󱚤  AI & Voice\n󰹑  Visuals & Display\n  Configs\n󰐉  Power")
+    selection=$(menu "Main" "🔍 Search Notes\n󰀻  Apps\n󰧑  Learn/Help\n󱓞  Utils\n󰹑  Visuals & Display\n  Configs\n󰐉  Power")
     
     route_selection "$selection"
 }
@@ -159,24 +159,24 @@ show_learn_menu() {
     esac
 }
 
-show_ai_menu() {
-    local choice
-    choice=$(menu "AI Tools" "󰔊  TTS - Kokoro (GPU)\n󰔊  TTS - Kokoro (CPU)\n󰍬  STT - Faster Whisper\n󰍬  STT - Parakeet (GPU)\n󰍉  OCR Selection")
+# show_ai_menu() {
+#     local choice
+#     choice=$(menu "AI Tools" "󰔊  TTS - Kokoro (GPU)\n󰔊  TTS - Kokoro (CPU)\n󰍬  STT - Faster Whisper\n󰍬  STT - Parakeet (GPU)\n󰍉  OCR Selection")
 
-    case "${choice,,}" in
-        *kokoro*gpu*) run_app "$SCRIPTS_DIR/tts_stt/kokoro_gpu/speak.sh" ;;
-        *kokoro*cpu*) run_app "$SCRIPTS_DIR/tts_stt/kokoro_cpu/kokoro.sh" ;;
-        *whisper*)    run_app "$SCRIPTS_DIR/tts_stt/faster_whisper/faster_whisper_stt.sh" ;;
-        *parakeet*)   run_app "$SCRIPTS_DIR/tts_stt/parakeet/parakeet.sh" ;;
-        *ocr*)
-            if region=$(slurp); then
-                grim -g "$region" - | tesseract stdin stdout -l eng | wl-copy
-            fi
-            exit 0 
-            ;;
-        *) show_main_menu ;;
-    esac
-}
+#     case "${choice,,}" in
+#         *kokoro*gpu*) run_app "$SCRIPTS_DIR/tts_stt/kokoro_gpu/speak.sh" ;;
+#         *kokoro*cpu*) run_app "$SCRIPTS_DIR/tts_stt/kokoro_cpu/kokoro.sh" ;;
+#         *whisper*)    run_app "$SCRIPTS_DIR/tts_stt/faster_whisper/faster_whisper_stt.sh" ;;
+#         *parakeet*)   run_app "$SCRIPTS_DIR/tts_stt/parakeet/parakeet.sh" ;;
+#         *ocr*)
+#             if region=$(slurp); then
+#                 grim -g "$region" - | tesseract stdin stdout -l eng | wl-copy
+#             fi
+#             exit 0 
+#             ;;
+#         *) show_main_menu ;;
+#     esac
+# }
 # show_install_menu() {
 #     local choice
 #     choice=$(menu "Install" "AUR
@@ -267,7 +267,7 @@ show_visuals_menu() {
         *shader*)           run_app "$SCRIPTS_DIR/rofi/shader_menu.sh" ;;
         *sunset*)           run_app "$SCRIPTS_DIR/sliders/hyprsunset_slider.sh" ;;
         *blur*|*opacity*)   run_app "$SCRIPTS_DIR/hypr/hypr_blur_opacity_shadow_toggle.sh" ;;
-        *waybar*)           run_term "waybar_swap_config.sh" "$SCRIPTS_DIR/waybar/waybar_swap_config.sh" ;;
+        *waybar*)           run_term "waybar_swap_config.sh" "$SCRIPTS_DIR/rofi/waybar_selector.sh" ;;
         *cw*)               run_app "$SCRIPTS_DIR/hypr/screen_rotate.sh" -90 ;;
         *ccw*)              run_app "$SCRIPTS_DIR/hypr/screen_rotate.sh" +90 ;;
         *up*)               run_app "$SCRIPTS_DIR/hypr/adjust_scale.sh" + ;;

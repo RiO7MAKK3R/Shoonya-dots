@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Show a fuzzy-finder TUI for picking new AUR packages to install.
+# Shoonya-compatible. Requires paru or yay.
+
+# --- AUR helper detection ---
+if command -v paru &>/dev/null; then
+  AUR=yay
+elif command -v yay &>/dev/null; then
+  AUR=paru
+else
+  echo "Error: No AUR helper found. Please install paru or yay."
+  exit 1
+fi
+
+# --- FZF interface ---
+fzf_args=(
+  --multi
+  --preview "$AUR -Siia {1}"
+  --preview-label='alt-p: toggle description, alt-b/B: toggle PKGBUILD, alt-j/k: scroll, tab: multi-select'
+  --preview-label-pos='bottom'
+  --preview-window 'down:65%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --bind 'alt-k:preview-up,alt-j:preview-down'
+  --bind "alt-b:change-preview:$AUR -Gpa {1} | tail -n +5"
+  --bind "alt-B:change-preview:$AUR -Siia {1}"
+  --color 'pointer:green,marker:green'
+)
+
+pkg_names=$("$AUR" -Slqa | fzf "${fzf_args[@]}")
+
+# --- Install selected packages ---
+if [[ -n "$pkg_names" ]]; then
+  sudo -v
+  echo "$pkg_names" | sed 's/^/aur\//' | tr '\n' ' ' | xargs "$AUR" -S --noconfirm
+
+  # Refresh locate database if available
+  if command -v updatedb &>/dev/null; then
+    sudo updatedb
+  fi
+
+  echo ""
+  echo "✔ Done. Packages installed successfully."
+  read -rp "Press Enter to close..."
+fi

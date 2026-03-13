@@ -4,6 +4,21 @@ set -euo pipefail
 # Shoonya OS · Dev Environment Remover
 # fzf-based multi-select TUI
 
+# ---------- AUR helper ----------
+
+if command -v paru &>/dev/null; then
+  AUR=paru
+elif command -v yay &>/dev/null; then
+  AUR=yay
+else
+  echo "❌ No AUR helper found. Please install paru or yay."
+  exit 1
+fi
+
+pkg_remove() {
+  "$AUR" -Rns --noconfirm "$@" 2>/dev/null || true
+}
+
 # ---------- helpers ----------
 
 ensure_mise() {
@@ -14,36 +29,43 @@ ensure_mise() {
   exit 0
 }
 
+mise_remove() {
+  local tool="$1"
+  ensure_mise
+  mise uninstall "$tool" --all 2>/dev/null || true
+  mise rm -g "$tool" 2>/dev/null || true
+}
+
 remove_php() {
-  sudo pacman -Rns --noconfirm php composer php-sqlite xdebug 2>/dev/null || true
+  pkg_remove php composer php-sqlite xdebug
 }
 
 # ---------- dev env catalog ----------
-# key|Title|Description
 
-DEV_ENVS=$(
-  cat <<'EOF'
-python|Python|Python via mise
-node|Node.js|Node.js runtime
-bun|Bun|Bun runtime
-deno|Deno|Deno runtime
-go|Go|Go toolchain
-ruby|Ruby|Ruby + gems
-php|PHP|PHP + Composer
-laravel|Laravel|Laravel installer
-symfony|Symfony|Symfony CLI
-elixir|Elixir|Elixir + Erlang
-phoenix|Phoenix|Phoenix framework
-rust|Rust|Rust toolchain
-java|Java|Java SDK
-zig|Zig|Zig compiler + ZLS
-ocaml|OCaml|OCaml + opam
-dotnet|Dotnet|.NET SDK
-clojure|Clojure|Clojure runtime
+# Format: key|Title|Description
+DEV_ENVS=$(cat <<'EOF'
+python|Python|Python via mise + uv
+node|Node.js|Node.js runtime via mise
+bun|Bun|Bun runtime via mise
+deno|Deno|Deno runtime via mise
+go|Go|Go toolchain via mise
+ruby|Ruby|Ruby + Rails gems via mise
+php|PHP|PHP + Composer + Xdebug via paru/yay
+laravel|Laravel|Laravel global installer (composer)
+symfony|Symfony|Symfony CLI via paru/yay
+elixir|Elixir|Elixir + Erlang via mise
+phoenix|Phoenix|Phoenix framework (shares Elixir/Erlang)
+rust|Rust|Rust toolchain via rustup
+java|Java|Java SDK via mise
+zig|Zig|Zig compiler + ZLS via mise
+ocaml|OCaml|OCaml + opam toolchain
+dotnet|.NET|.NET SDK via mise
+clojure|Clojure|Clojure via mise + rlwrap
+scala|Scala|Scala + scala-cli via mise
 EOF
 )
 
-# ---------- fzf UI ----------
+# ---------- fzf TUI ----------
 
 fzf_args=(
   --multi
@@ -57,45 +79,40 @@ fzf_args=(
   --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
   --color 'pointer:red,marker:red'
   --prompt 'Remove Dev Environments > '
+  --header 'TAB: multi-select  ENTER: remove  ESC: cancel'
 )
 
-selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}")
+selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}") || true
 
-[[ -z "$selection" ]] && exit 0
+[[ -z "$selection" ]] && echo "No selection made. Exiting." && exit 0
 
 # ---------- removal loop ----------
 
-echo "$selection" | while IFS='|' read -r key _ _; do
+echo "$selection" | while IFS='|' read -r key title _; do
   echo
-  echo "▶ Removing: $key"
+  echo "▶ Removing: $title"
   echo
 
   case "$key" in
-    ruby)
-      ensure_mise
-      mise uninstall ruby --all
-      mise rm -g ruby
-      rm -f ~/.gemrc
+    python)
+      mise_remove python
+      rm -f ~/.local/bin/uv ~/.local/bin/uvx 2>/dev/null || true
       ;;
     node)
-      ensure_mise
-      mise uninstall node --all
-      mise rm -g node
+      mise_remove node
       ;;
     bun)
-      ensure_mise
-      mise uninstall bun --all
-      mise rm -g bun
+      mise_remove bun
       ;;
     deno)
-      ensure_mise
-      mise uninstall deno --all
-      mise rm -g deno
+      mise_remove deno
       ;;
     go)
-      ensure_mise
-      mise uninstall go --all
-      mise rm -g go
+      mise_remove go
+      ;;
+    ruby)
+      mise_remove ruby
+      rm -f ~/.gemrc
       ;;
     php)
       remove_php
@@ -104,60 +121,55 @@ echo "$selection" | while IFS='|' read -r key _ _; do
       composer global remove laravel/installer 2>/dev/null || true
       ;;
     symfony)
-      sudo pacman -Rns --noconfirm symfony-cli 2>/dev/null || true
+      pkg_remove symfony-cli
       ;;
-    python)
-      ensure_mise
-      mise uninstall python --all
-      mise rm -g python
-      rm -rf ~/.local/bin/uv ~/.local/bin/uvx ~/.cargo/bin/uv 2>/dev/null || true
+    elixir)
+      mise_remove elixir
+      mise_remove erlang
       ;;
-    elixir|phoenix)
+    phoenix)
+      # Phoenix shares Elixir/Erlang — only remove mix archives
       ensure_mise
-      mise uninstall elixir --all
-      mise uninstall erlang --all
-      mise rm -g elixir
-      mise rm -g erlang
-      ;;
-    zig)
-      ensure_mise
-      mise uninstall zig --all
-      mise uninstall zls --all
-      mise rm -g zig
-      mise rm -g zls
+      mise x elixir -- mix archive.uninstall phx_new 2>/dev/null || true
       ;;
     rust)
       rustup self uninstall -y 2>/dev/null || true
       ;;
     java)
-      ensure_mise
-      mise uninstall java --all
-      mise rm -g java
+      mise_remove java
       ;;
-    dotnet)
-      ensure_mise
-      mise uninstall dotnet --all
-      mise rm -g dotnet
+    zig)
+      mise_remove zig
+      mise_remove zls
       ;;
     ocaml)
       opam switch remove default -y 2>/dev/null || true
       rm -rf ~/.opam 2>/dev/null || true
       sudo rm -f /usr/local/bin/opam 2>/dev/null || true
       ;;
+    dotnet)
+      mise_remove dotnet
+      ;;
     clojure)
-      ensure_mise
-      mise uninstall clojure --all
-      mise rm -g clojure
+      mise_remove clojure
+      pkg_remove rlwrap
+      ;;
+    scala)
+      mise_remove scala
+      mise_remove scala-cli
+      # Java may be shared — leave it unless explicitly selected
       ;;
   esac
+
+  echo "✔ $title removed."
 done
 
-echo
-echo "✔ Selected environments removed."
-echo
-echo "Done."
-echo "Press Enter or Esc to close."
+# ---------- done ----------
 
+echo ""
+echo "✔ All selected environments removed."
+echo ""
+echo "Press Enter or Esc to close."
 while true; do
   read -rsn1 key
   [[ $key == "" || $key == $'\e' ]] && break

@@ -1,12 +1,22 @@
 #!/bin/bash
 
-# Show a fuzzy-finder TUI for picking installed Arch (official repo) packages to remove.
-# Shoonya-compatible. Uses pacman.
+# Show a fuzzy-finder TUI for picking installed AUR packages to remove.
+# Shoonya-compatible. Requires paru or yay.
+
+# --- AUR helper detection ---
+if command -v paru &>/dev/null; then
+  AUR=paru
+elif command -v yay &>/dev/null; then
+  AUR=yay
+else
+  echo "Error: No AUR helper found. Please install paru or yay."
+  exit 1
+fi
 
 # --- FZF interface ---
 fzf_args=(
   --multi
-  --preview 'pacman -Qii {1}'
+  --preview "$AUR -Qii {1}"
   --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
@@ -14,17 +24,17 @@ fzf_args=(
   --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
   --bind 'alt-k:preview-up,alt-j:preview-down'
   --color 'pointer:red,marker:red'
-  --prompt 'Remove Packages > '
+  --prompt 'Remove AUR Packages > '
   --header 'TAB: multi-select  ENTER: remove  ESC: cancel'
 )
 
-# List only installed official-repo packages
-pkg_names=$(pacman -Qnq | fzf "${fzf_args[@]}") || true
+# List only installed AUR packages (foreign packages not from official repos)
+pkg_names=$(pacman -Qmq | fzf "${fzf_args[@]}") || true
 
 # --- Remove selected packages ---
 if [[ -n "$pkg_names" ]]; then
   sudo -v
-  echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -Rns --noconfirm
+  echo "$pkg_names" | tr '\n' ' ' | xargs "$AUR" -Rns --noconfirm
 
   # Refresh locate database if available
   if command -v updatedb &>/dev/null; then

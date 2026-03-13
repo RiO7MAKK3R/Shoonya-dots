@@ -1,8 +1,198 @@
+# #!/usr/bin/env bash
+# set -euo pipefail
+
+# # Shoonya OS · Dev Environment Installer
+# # fzf-based multi-select TUI
+
+# # ---------- helpers ----------
+
+# ensure_mise() {
+#   if command -v mise >/dev/null 2>&1; then
+#     return 0
+#   fi
+
+#   echo "mise not found. Installing mise..."
+#   curl -fsSL https://mise.jdx.dev/install.sh | sh
+#   export PATH="$HOME/.local/bin:$PATH"
+
+#   command -v mise >/dev/null 2>&1 || {
+#     echo "❌ mise installation failed"
+#     exit 1
+#   }
+# }
+
+# install_php() {
+#   sudo pacman -S php composer php-sqlite xdebug --noconfirm
+# }
+
+# install_node() {
+#   ensure_mise
+#   mise use --global node@latest
+# }
+
+# # ---------- dev env catalog ----------
+
+# # Format:
+# # key|Title|Description
+# DEV_ENVS=$(
+#   cat <<'EOF'
+# python|Python|Python (latest) via mise + uv package manager
+# node|Node.js|Node.js runtime (LTS) via mise
+# bun|Bun|Bun JavaScript runtime via mise
+# deno|Deno|Deno runtime via mise
+# go|Go|Go compiler + toolchain via mise
+# ruby|Ruby|Ruby + Rails via mise
+# php|PHP|PHP + Composer via pacman
+# laravel|Laravel|PHP + Node + Laravel installer
+# symfony|Symfony|PHP + Symfony CLI
+# elixir|Elixir|Elixir + Erlang via mise
+# phoenix|Phoenix|Elixir + Phoenix framework
+# rust|Rust|Rust toolchain via rustup
+# java|Java|Java (latest) via mise
+# zig|Zig|Zig compiler + ZLS via mise
+# ocaml|OCaml|OCaml + opam toolchain
+# dotnet|Dotnet|.NET SDK via mise
+# clojure|Clojure|Clojure via mise
+# EOF
+# )
+
+# # ---------- fzf UI ----------
+
+# fzf_args=(
+#   --multi
+#   --delimiter='|'
+#   --with-nth=2
+#   --preview 'echo {3}'
+#   --preview-label='Description'
+#   --preview-window 'down:60%:wrap'
+#   --bind 'alt-p:toggle-preview'
+#   --bind 'alt-j:preview-down,alt-k:preview-up'
+#   --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+#   --color 'pointer:green,marker:green'
+#   --prompt 'Dev Environments > '
+# )
+
+# selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}")
+
+# [[ -z "$selection" ]] && exit 0
+
+# # ---------- install loop ----------
+
+# echo "$selection" | while IFS='|' read -r key _ _; do
+#   echo
+#   echo "▶ Installing: $key"
+#   echo
+
+#   case "$key" in
+#     python)
+#       ensure_mise
+#       mise use --global python@latest
+#       curl -fsSL https://astral.sh/uv/install.sh | sh
+#       ;;
+#     node)
+#       install_node
+#       ;;
+#     bun)
+#       ensure_mise
+#       mise use --global bun@latest
+#       ;;
+#     deno)
+#       ensure_mise
+#       mise use --global deno@latest
+#       ;;
+#     go)
+#       ensure_mise
+#       mise use --global go@latest
+#       ;;
+#     ruby)
+#       ensure_mise
+#       omarchy-pkg-add libyaml
+#       mise use --global ruby@latest
+#       mise x ruby -- gem install rails --no-document
+#       ;;
+#     php)
+#       install_php
+#       ;;
+#     laravel)
+#       install_php
+#       install_node
+#       composer global require laravel/installer
+#       ;;
+#     symfony)
+#       install_php
+#       omarchy-pkg-add symfony-cli
+#       ;;
+#     elixir)
+#       ensure_mise
+#       mise use --global erlang@latest
+#       mise use --global elixir@latest
+#       mise x elixir -- mix local.hex --force
+#       ;;
+#     phoenix)
+#       ensure_mise
+#       mise use --global erlang@latest
+#       mise use --global elixir@latest
+#       mise x elixir -- mix archive.install hex phx_new --force
+#       ;;
+#     rust)
+#       bash -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+#       ;;
+#     java)
+#       ensure_mise
+#       mise use --global java@latest
+#       ;;
+#     zig)
+#       ensure_mise
+#       mise use --global zig@latest
+#       mise use --global zls@latest
+#       ;;
+#     ocaml)
+#       bash -c "$(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
+#       opam init --yes
+#       eval "$(opam env)"
+#       opam install ocaml-lsp-server odoc ocamlformat utop --yes
+#       ;;
+#     dotnet)
+#       ensure_mise
+#       mise use --global dotnet@latest
+#       ;;
+#     clojure)
+#       ensure_mise
+#       omarchy-pkg-add rlwrap
+#       mise use --global clojure@latest
+#       ;;
+#   esac
+# done
+
+# omarchy-show-done
+# echo
+# echo "Done."
+# echo "Press Enter or Esc to close."
+
+# while true; do
+#   read -rsn1 key
+#   [[ $key == "" || $key == $'\e' ]] && break
+# done
 #!/usr/bin/env bash
 set -euo pipefail
 
 # Shoonya OS · Dev Environment Installer
 # fzf-based multi-select TUI
+
+# ---------- AUR helper ----------
+
+if command -v paru &>/dev/null; then
+  AUR=paru
+elif command -v yay &>/dev/null; then
+  AUR=yay
+else
+  echo "❌ No AUR helper found. Please install paru or yay."
+  exit 1
+fi
+
+pkg_add() {
+  "$AUR" -S --noconfirm "$@"
+}
 
 # ---------- helpers ----------
 
@@ -10,11 +200,9 @@ ensure_mise() {
   if command -v mise >/dev/null 2>&1; then
     return 0
   fi
-
   echo "mise not found. Installing mise..."
   curl -fsSL https://mise.jdx.dev/install.sh | sh
   export PATH="$HOME/.local/bin:$PATH"
-
   command -v mise >/dev/null 2>&1 || {
     echo "❌ mise installation failed"
     exit 1
@@ -22,7 +210,25 @@ ensure_mise() {
 }
 
 install_php() {
-  sudo pacman -S php composer php-sqlite xdebug --noconfirm
+  pkg_add php composer php-sqlite xdebug
+
+  if [[ :$PATH: != *:$HOME/.config/composer/vendor/bin:* ]]; then
+    echo 'export PATH="$HOME/.config/composer/vendor/bin:$PATH"' >> "$HOME/.bashrc"
+    export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+    echo "Added Composer global bin to PATH."
+  fi
+
+  local php_ini_path="/etc/php/php.ini"
+  local extensions_to_enable=(bcmath intl iconv openssl pdo_sqlite pdo_mysql)
+
+  sudo sed -i \
+    -e 's/^;zend_extension=xdebug.so/zend_extension=xdebug.so/' \
+    -e 's/^;xdebug.mode=debug/xdebug.mode=debug/' \
+    /etc/php/conf.d/xdebug.ini
+
+  for ext in "${extensions_to_enable[@]}"; do
+    sudo sed -i "s/^;extension=${ext}/extension=${ext}/" "$php_ini_path"
+  done
 }
 
 install_node() {
@@ -32,17 +238,15 @@ install_node() {
 
 # ---------- dev env catalog ----------
 
-# Format:
-# key|Title|Description
-DEV_ENVS=$(
-  cat <<'EOF'
+# Format: key|Title|Description
+DEV_ENVS=$(cat <<'EOF'
 python|Python|Python (latest) via mise + uv package manager
 node|Node.js|Node.js runtime (LTS) via mise
 bun|Bun|Bun JavaScript runtime via mise
 deno|Deno|Deno runtime via mise
 go|Go|Go compiler + toolchain via mise
 ruby|Ruby|Ruby + Rails via mise
-php|PHP|PHP + Composer via pacman
+php|PHP|PHP + Composer + Xdebug via paru/yay
 laravel|Laravel|PHP + Node + Laravel installer
 symfony|Symfony|PHP + Symfony CLI
 elixir|Elixir|Elixir + Erlang via mise
@@ -51,12 +255,13 @@ rust|Rust|Rust toolchain via rustup
 java|Java|Java (latest) via mise
 zig|Zig|Zig compiler + ZLS via mise
 ocaml|OCaml|OCaml + opam toolchain
-dotnet|Dotnet|.NET SDK via mise
-clojure|Clojure|Clojure via mise
+dotnet|.NET|.NET SDK via mise
+clojure|Clojure|Clojure via mise + rlwrap
+scala|Scala|Scala + scala-cli via mise
 EOF
 )
 
-# ---------- fzf UI ----------
+# ---------- fzf TUI ----------
 
 fzf_args=(
   --multi
@@ -70,23 +275,25 @@ fzf_args=(
   --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
   --color 'pointer:green,marker:green'
   --prompt 'Dev Environments > '
+  --header 'TAB: multi-select  ENTER: install  ESC: cancel'
 )
 
-selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}")
+selection=$(echo "$DEV_ENVS" | fzf "${fzf_args[@]}") || true
 
-[[ -z "$selection" ]] && exit 0
+[[ -z "$selection" ]] && echo "No selection made. Exiting." && exit 0
 
 # ---------- install loop ----------
 
-echo "$selection" | while IFS='|' read -r key _ _; do
+echo "$selection" | while IFS='|' read -r key title _; do
   echo
-  echo "▶ Installing: $key"
+  echo "▶ Installing: $title"
   echo
 
   case "$key" in
     python)
       ensure_mise
       mise use --global python@latest
+      echo -e "\nInstalling uv...\n"
       curl -fsSL https://astral.sh/uv/install.sh | sh
       ;;
     node)
@@ -106,9 +313,13 @@ echo "$selection" | while IFS='|' read -r key _ _; do
       ;;
     ruby)
       ensure_mise
-      omarchy-pkg-add libyaml
+      pkg_add libyaml
       mise use --global ruby@latest
+      mise settings add idiomatic_version_file_enable_tools ruby
+      mise settings add ruby.compile false
+      echo "gem: --no-document" > ~/.gemrc
       mise x ruby -- gem install rails --no-document
+      echo -e "\nYou can now run: rails new myproject"
       ;;
     php)
       install_php
@@ -117,10 +328,12 @@ echo "$selection" | while IFS='|' read -r key _ _; do
       install_php
       install_node
       composer global require laravel/installer
+      echo -e "\nYou can now run: laravel new myproject"
       ;;
     symfony)
       install_php
-      omarchy-pkg-add symfony-cli
+      pkg_add symfony-cli
+      echo -e "\nYou can now run: symfony new --webapp myproject"
       ;;
     elixir)
       ensure_mise
@@ -132,7 +345,10 @@ echo "$selection" | while IFS='|' read -r key _ _; do
       ensure_mise
       mise use --global erlang@latest
       mise use --global elixir@latest
+      mise x elixir -- mix local.hex --force
+      mise x elixir -- mix local.rebar --force
       mise x elixir -- mix archive.install hex phx_new --force
+      echo -e "\nYou can now run: mix phx.new my_app"
       ;;
     rust)
       bash -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
@@ -158,17 +374,26 @@ echo "$selection" | while IFS='|' read -r key _ _; do
       ;;
     clojure)
       ensure_mise
-      omarchy-pkg-add rlwrap
+      pkg_add rlwrap
       mise use --global clojure@latest
       ;;
+    scala)
+      ensure_mise
+      mise use --global java@latest
+      mise use --global scala@latest
+      mise use --global scala-cli@latest
+      ;;
   esac
+
+  echo "✔ $title installed."
 done
 
-omarchy-show-done
-echo
-echo "Done."
-echo "Press Enter or Esc to close."
+# ---------- done ----------
 
+echo ""
+echo "✔ All selected environments installed."
+echo ""
+echo "Press Enter or Esc to close."
 while true; do
   read -rsn1 key
   [[ $key == "" || $key == $'\e' ]] && break
