@@ -15,12 +15,12 @@ bat
 bc
 blanket
 blueman
-bluetui
 bluez
 bluez-utils
 bmon
 brightnessctl
 btop
+btrfs-assistant
 btrfs-progs
 calcurse
 caligula
@@ -31,7 +31,6 @@ chafa
 clang
 cliphist
 cmake
-collision
 compsize
 cpio
 cups
@@ -48,7 +47,6 @@ fastfetch
 fd
 ffmpegthumbnailer
 file-roller
-filezilla
 firefox
 firewalld
 flatpak
@@ -67,6 +65,7 @@ gparted
 grim
 grsync
 grub
+grub-btrfs
 gst-plugin-pipewire
 gum
 guvcview
@@ -75,7 +74,6 @@ gvfs-nfs
 gvfs-smb
 handbrake
 htop
-httrack
 hypridle
 hyprland
 hyprlock
@@ -83,11 +81,11 @@ hyprpaper
 hyprpicker
 hyprpolkitagent
 hyprshade
+hyprshot
 hyprsunset
 identity
 iftop
 imagemagick
-impala
 impression
 inetutils
 inotify-tools
@@ -102,7 +100,6 @@ iwd
 jq
 kdeconnect
 kitty
-krita
 kvantum
 lazygit-git
 less
@@ -116,7 +113,6 @@ linux
 linux-firmware
 logrotate
 loupe
-lshw
 man-db
 matugen
 mesa-utils
@@ -166,6 +162,7 @@ rofi
 rq
 rsync
 sassc
+satty
 sddm
 sdl2_image
 sdl2_mixer
@@ -176,6 +173,9 @@ shfmt
 showmethekey
 slurp
 smartmontools
+snap-pac
+snap-pac-grub
+snapper
 snapshot
 socat
 sof-firmware
@@ -193,11 +193,7 @@ sysbench
 sysstat
 system-config-printer
 tealdeer
-termusic
-tesseract-data-eng
 thermald
-tlp
-tlp-rdw
 tray-tui
 tree
 tree-sitter-cli
@@ -222,12 +218,12 @@ vulkan-intel
 vulkan-tools
 wavemon
 waybar
-waydroid
 waypaper
 webp-pixbuf-loader
 wev
 wf-recorder-gui
 wget
+wifitui
 wireless_tools
 wireplumber
 wl-clipboard
@@ -247,7 +243,6 @@ yay-debug
 yazi
 yt-dlp
 zathura
-zathura-pdf-mupdf
 zellij
 zip
 zram-generator

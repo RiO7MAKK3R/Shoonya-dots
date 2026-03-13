@@ -1,5 +1,6 @@
 com.brave.Browser
 com.dropbox.Client
+com.github.tchx84.Flatseal
 com.usebottles.bottles
+org.bleachbit.BleachBit
 org.localsend.localsend_app
-org.virt_manager.virt-manager

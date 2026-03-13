@@ -13,6 +13,7 @@ peaclock
 python-imageio-ffmpeg
 python-pywalfox
 python-screeninfo
+snap-pac-grub
 snapd
 snapd-glib
 spotify
@@ -20,6 +21,7 @@ tray-tui
 visual-studio-code-bin
 waypaper
 wf-recorder-gui
+wifitui
 wlogout
 xdg-terminal-exec
 yay
