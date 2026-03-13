@@ -1,7 +1,7 @@
 //Minimal Vertical
 {
     "layer": "top",
-    "position": "right",
+    "position": "right"
     "spacing": 0,
     "width": 30, // Slightly wider to fit the numbers comfortably
     "margin-top": 5,

@@ -7,7 +7,7 @@
   "position": "top",
   "spacing": 6,
   "height": 36,
-  "margin-top": 6,
+  "margin-top": 0,
   "margin-left": 10,
   "margin-right": 10,
   "margin-bottom": 0,
@@ -28,6 +28,7 @@
 
   "modules-right": [
     "mpris",
+    "network",
     "custom-net-speed",
     "bluetooth",
     "pulseaudio#output",
@@ -170,7 +171,7 @@
     "tooltip-format-wifi": "󰤨 {essid}\n󱑽 {signalStrength}%\n󰩟 {ipaddr}",
     "tooltip-format-ethernet": "󰈀 Ethernet\n󰩟 {ipaddr}",
     "tooltip-format-disconnected": "󰤭 Disconnected",
-    "on-click": "uwsm-app -- kitty --class impala -e impala"
+    "on-click": "uwsm-app -- kitty --class wifitui -e wifitui"
   },
   "bluetooth": {
     "format": "󰂯",
@@ -181,9 +182,9 @@
     "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
     "tooltip-format-enumerate-connected": "󰂱 {device_alias}",
     "tooltip-format-enumerate-connected-battery": "󰂱 {device_alias} ({device_battery_percentage}%)",
-    // "on-click": "uwsm-app -- blueman-manager",
+    "on-click": "uwsm-app -- blueman-manager",
 
-    "on-click": "uwsm-app -- kitty --class bluetui -e bluetui"
+    // "on-click": "uwsm-app -- kitty --class bluetui -e bluetui"
     // "on-click-right": "uwsm-app -- kitty --class bluetui -e bluetui"
   },
 

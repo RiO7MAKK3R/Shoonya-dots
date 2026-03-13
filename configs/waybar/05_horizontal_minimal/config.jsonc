@@ -25,7 +25,9 @@
     ],
     
     "modules-right": [ 
-        //"custom/network",      
+        // "custom/network",
+        "network",
+        "bluetooth",      
         "pulseaudio",
         "battery",
         "custom/power"
@@ -82,6 +84,20 @@
         "on-click": "uwsm-app -- gnome-clocks",
         "interval": 60
     },
+    "bluetooth": {
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-connected": "󰂱 {num_connections}",
+        "format-connected-battery": "󰂱 {device_battery_percentage}%",
+        "tooltip-format": "{controller_alias}\n{controller_address}\n\n{device_enumerate}",
+        "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "󰂱 {device_alias}",
+        "tooltip-format-enumerate-connected-battery": "󰂱 {device_alias} ({device_battery_percentage}%)",
+        "on-click": "uwsm-app -- blueman-manager",
+
+        // "on-click": "uwsm-app -- kitty --class bluetui -e bluetui"
+        // "on-click-right": "uwsm-app -- kitty --class bluetui -e bluetui"
+    },
 
     "custom/notification": {
         "format": "{icon}",
@@ -122,14 +138,25 @@
         "tooltip-format": "{timeTo}\nHealth: {health}%"
     },
 
-    "custom/network": {
-        "return-type": "json",
-        "exec": "$HOME/user_scripts/waybar/network/network_meter_calling.sh vertical",
-        "interval": 1, 
-        "on-click": "uwsm-app -- kitty --class wifitui -e wifitui",
-        "on-click-right": "nmcli radio wifi on",
-        "on-click-middle": "nmcli radio wifi off"
-    },
+    // "custom/network": {
+    //     "return-type": "json",
+    //     "exec": "$HOME/user_scripts/waybar/network/network_meter_calling.sh vertical",
+    //     "interval": 1, 
+    //     "on-click": "uwsm-app -- kitty --class wifitui -e wifitui",
+    //     "on-click-right": "nmcli radio wifi on",
+    //     "on-click-middle": "nmcli radio wifi off"
+    // },
+
+    "network": {
+    "format-wifi": "󰤨",
+    "format-ethernet": "󰈀",
+    "format-disconnected": "󰤭",
+    "format-linked": "󰈁",
+    "tooltip-format-wifi": "󰤨 {essid}\n󱑽 {signalStrength}%\n󰩟 {ipaddr}",
+    "tooltip-format-ethernet": "󰈀 Ethernet\n󰩟 {ipaddr}",
+    "tooltip-format-disconnected": "󰤭 Disconnected",
+    "on-click": "uwsm-app -- kitty --class wifitui -e wifitui"
+  },
 
     "custom/power": {
         "format": "",

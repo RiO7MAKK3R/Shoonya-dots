@@ -6,8 +6,8 @@
   "reload_style_on_change": true,
   "position": "top",
   "spacing": 4,
-  "height": 40,
-  "margin-top": 6,
+  "height": 20,
+  "margin-top": 0,
   "margin-left": 10,
   "margin-right": 10,
   "margin-bottom": 0,
@@ -195,7 +195,7 @@
     "tooltip-format-wifi": "󰤨 {essid}\n󱑽 {signalStrength}%\n󰩟 {ipaddr}",
     "tooltip-format-ethernet": "󰈀 Ethernet\n󰩟 {ipaddr}",
     "tooltip-format-disconnected": "󰤭 Disconnected",
-    "on-click": "uwsm-app -- kitty --class impala -e impala"
+    "on-click": "uwsm-app -- kitty --class wifitui -e wifitui"
   },
 
   "bluetooth": {

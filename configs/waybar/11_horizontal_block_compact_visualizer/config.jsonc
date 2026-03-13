@@ -187,7 +187,7 @@
     "tooltip-format-ethernet": "󰈀 Ethernet\n󰩟 {ipaddr}",
     "tooltip-format-disconnected": "󰤭 Disconnected",
     // "on-click": "nm-connection-editor"
-    "on-click": "uwsm-app -- kitty --class impala -e impala"
+    "on-click": "uwsm-app -- kitty --class wifitui -e wifitui"
   },
 
   "bluetooth": {
@@ -199,8 +199,8 @@
     "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
     "tooltip-format-enumerate-connected": "󰂱 {device_alias}",
     "tooltip-format-enumerate-connected-battery": "󰂱 {device_alias} ({device_battery_percentage}%)",
-    // "on-click": "uwsm-app -- blueman-manager",
-    "on-click": "uwsm-app -- kitty --class bluetui -e bluetui"
+    "on-click": "uwsm-app -- blueman-manager",
+    // "on-click": "uwsm-app -- kitty --class bluetui -e bluetui"
     // "on-click-right": "uwsm-app -- kitty --class bluetui -e bluetui"
   },
 

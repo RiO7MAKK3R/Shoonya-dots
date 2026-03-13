@@ -47,8 +47,10 @@ opacity: 0.5;
 }
 
 #tray,
+#custom-tasktimer,
 #cpu,
 #battery,
+#custom-inhibit-suspend,
 #network,
 #bluetooth,
 #pulseaudio,
@@ -99,4 +101,34 @@ margin-left: 8.75px;
 
 .hidden {
   opacity: 0;
+}
+  
+/* ─────────────────────────────────────────────────────────────────────────────
+   IDLE INHIBITOR
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#custom-inhibit-suspend {
+  padding: 0px 12px 0px 9px;
+  margin: 5px 2px;
+  border-radius: 0px;
+  /* background-color: alpha(@surface_container, 0.6); */
+  /* color: @on_surface; */
+  font-size: 14px;
+  /* transition: all 0.2s ease-in-out; */
+}
+
+#custom-inhibit-suspend:hover {
+  /* background-color: alpha(@surface_container_high, 0.9); */
+}
+
+#custom-inhibit-suspend.disabled {
+  /* color: @tertiary;
+  padding: 0px 12px 0px 9px;
+  background-color: alpha(@tertiary_container, 0.3);
+  border: 1px solid alpha(@tertiary, 0.2); */
+}
+
+#custom-inhibit-suspend.enabled {
+  /* color: @on_surface_variant;
+  background-color: alpha(@surface_container, 0.6); */
 }

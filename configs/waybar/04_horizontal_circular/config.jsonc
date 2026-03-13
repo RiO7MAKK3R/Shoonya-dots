@@ -18,7 +18,8 @@
         "pulseaudio"
     ],
     "modules-right": [
-        "custom/net-speed",
+        "network",
+        "bluetooth",
         "battery",
         "custom/notification"
     ],
@@ -134,13 +135,24 @@
     },
 
     // === MODULES: RIGHT ===
-    "custom/net-speed": {
-        "exec": "$HOME/user_scripts/waybar/network/network_meter_calling.sh --horizontal",
-        "return-type": "json",
-        "format": "{}",
-        "interval": 1,
-        "tooltip": true
-    },
+    // "custom/net-speed": {
+    //     "exec": "$HOME/user_scripts/waybar/network/network_meter_calling.sh --horizontal",
+    //     "return-type": "json",
+    //     "format": "{}",
+    //     "interval": 1,
+    //     "tooltip": true
+    // },
+    "network": {
+    "format-wifi": "󰤨",
+    "format-ethernet": "󰈀",
+    "format-disconnected": "󰤭",
+    "format-linked": "󰈁",
+    "tooltip-format-wifi": "󰤨 {essid}\n󱑽 {signalStrength}%\n󰩟 {ipaddr}",
+    "tooltip-format-ethernet": "󰈀 Ethernet\n󰩟 {ipaddr}",
+    "tooltip-format-disconnected": "󰤭 Disconnected",
+    "on-click": "uwsm-app -- kitty --class wifitui -e wifitui"
+  },
+  
     "battery": {
         "states": { "warning": 30, "critical": 15 },
         "format": " {icon} {capacity} -{power:.0f}W",
@@ -148,6 +160,21 @@
         "format-plugged": "󰚥 {capacity}%",
         "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
     },
+    "bluetooth": {
+    "format": "󰂯",
+    "format-disabled": "󰂲",
+    "format-connected": "󰂱 {num_connections}",
+    "format-connected-battery": "󰂱 {device_battery_percentage}%",
+    "tooltip-format": "{controller_alias}\n{controller_address}\n\n{device_enumerate}",
+    "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "󰂱 {device_alias}",
+    "tooltip-format-enumerate-connected-battery": "󰂱 {device_alias} ({device_battery_percentage}%)",
+    "on-click": "uwsm-app -- blueman-manager",
+
+    // "on-click": "uwsm-app -- kitty --class bluetui -e bluetui"
+    // "on-click-right": "uwsm-app -- kitty --class bluetui -e bluetui"
+    },
+
     "custom/notification": {
         "format": "{icon}",
         "format-icons": {

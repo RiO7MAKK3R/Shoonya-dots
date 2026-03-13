@@ -1,7 +1,7 @@
 @import url("../../.config/matugen/generated/waybar-colors.css");
 
 * {
-    font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+    font-family: "JetBrainsMono Nerd Font Propo", "Noto Sans", sans-serif;
     font-size: 13px;
     font-weight: bold;
     min-height: 0;
@@ -18,10 +18,11 @@ window#waybar {
 #clock,
 #custom-notification,
 #workspaces,
+#network,
 #group-stats,
+#bluetooth,
 #pulseaudio,
-#battery,
-#custom-network {
+#battery {
     background-color: @surface_container;
     min-width: 20px;
     color: @on_surface;
@@ -39,7 +40,7 @@ window#waybar {
 #clock {
     background-color: @primary;
     color: @on_primary;
-    font-size: 12px; 
+    font-size: 13px; 
     padding-right: 8px;
 }
 
@@ -53,7 +54,7 @@ window#waybar {
     box-shadow: none;
     margin: 0 4px;
     padding: 0;
-    font-size: 12px;
+    font-size: 13px;
     color: @on_surface_variant;
     
     /* ADDED: Strong black text-shadow for visibility on light backgrounds */
@@ -68,7 +69,9 @@ window#waybar {
 }
 
 #custom-notification {
-    color: @on_surface_variant;
+    background-color: @primary;
+    color: @on_primary;
+    /* color: @on_surface_variant; */
 }
 
 /* --- CENTER SECTION --- */
@@ -103,22 +106,39 @@ window#waybar {
 }
 
 /* --- RIGHT SECTION --- */
-#custom-network {
+/* #custom-network {
     font-size: 12px;
     padding: 0 8px;
+} */
+#network {
+    font-size: 13px;
+    padding: 0 8px;
+    background-color: @primary;
+    color: @on_primary;
 }
 
 #pulseaudio, #battery {
-    font-size: 12px; 
+    background-color: @primary;
+    color: @on_primary;
+    font-size: 13px; 
     padding: 0 8px;
 }
 
 #battery.charging { color: @tertiary; }
 #battery.warning { color: @error; }
 
+#bluetooth {
+    background-color: @primary;
+    color: @on_primary;
+    font-size: 13px;
+    padding: 0 8px;
+}
+
 #custom-power {
     /*background-color: @error_container;
-    color: @on_error_container;*/
+    color: @on_error_container; */
+    background-color: @primary;
+    color: @on_primary;
     font-size: 16px; /* Slightly smaller icon to match narrow width */
     border-radius: 100px;
     margin: 3px 1px;

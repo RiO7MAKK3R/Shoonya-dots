@@ -144,10 +144,12 @@ tooltip label {
 #battery,
 #pulseaudio,
 #clock,
+#bluetooth,
 #custom-notification,
 #custom-arch,
 #custom-lock,
 #custom-logout,
+#network,
 #custom-reboot,
 #custom-shutdown,
 #temperature.cpu,
@@ -341,6 +343,48 @@ tooltip label {
     border-color: @primary;
     box-shadow: 0 0 10px alpha(@primary, 0.4);
 }
+
+/* ============================================================ */
+/* NETWORK                                        */
+/* ============================================================ */
+#network {
+    font-size: 15px;
+    color: @primary; 
+}
+
+#network:hover {
+    background-color: @secondary;
+    color: @on_secondary;
+    border-color: @secondary;
+    box-shadow: 0 0 10px alpha(@secondary, 0.4);
+}
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BLUETOOTH
+   ───────────────────────────────────────────────────────────────────────────── */
+
+#bluetooth {
+    font-size: 15px;
+    color: @primary; 
+}
+
+#bluetooth:hover {
+    background-color: @secondary;
+    color: @on_secondary;
+    border-color: @secondary;
+    box-shadow: 0 0 10px alpha(@secondary, 0.4);
+}
+
+#bluetooth.disabled {
+  color: alpha(@primary, 0.6);
+}
+
+#bluetooth.connected {
+  color: @primary_fixed;
+}
+
 
 /* ============================================================ */
 /* BATTERY                                                     */

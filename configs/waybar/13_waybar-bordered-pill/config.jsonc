@@ -17,6 +17,7 @@
     "mpris",
     "group/tray-expander",
     "backlight",
+    "custom/inhibit-suspend",  
     "network",
     "bluetooth",
     "pulseaudio",
@@ -43,7 +44,7 @@
     "tooltip-format-disconnected": "Disconnected",
     "interval": 3,
     "nospacing": 1,
-    "on-click": "alacritty --class=Impala -e impala"
+    "on-click": "uwsm-app -- kitty --class wifitui -e wifitui"
   },
 
   "hyprland/workspaces": {
@@ -138,7 +139,9 @@
     "format-disabled": "󰂲",
     "format-connected": "",
     "tooltip-format": "Devices connected: {num_connections}",
-    "on-click": "blueberry"
+    // "on-click": "blueberry"
+    "on-click": "uwsm-app -- blueman-manager",
+
   },
   "pulseaudio": {
     "format": "{icon}",
@@ -190,5 +193,16 @@
   },
   "hyprland/window": {
     "format": "{}"
+, },
+  
+  "custom/inhibit-suspend": {
+    "format": "{}",
+    "exec": "if pgrep -x 'hypridle' > /dev/null; then echo '{\"text\": \"󰾪\", \"tooltip\": \"Idle enabled. Click to disable.\", \"class\": \"enabled\"}'; else echo '{\"text\": \"󰅶\", \"tooltip\": \"Idle disabled. Click to enable.\", \"class\": \"disabled\"}'; fi",
+    "return-type": "json",
+    "interval": 5,
+    "signal": 9,
+    "on-click": "uwsm-app -- ~/user_scripts/waybar/toggle_hypridle.sh",
+    "escape": true
   }
+  
 }

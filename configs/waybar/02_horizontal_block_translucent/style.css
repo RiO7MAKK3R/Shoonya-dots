@@ -11,7 +11,7 @@
 * {
   border: none;
   min-height: 0;
-  font-family: "JetBrainsMono Nerd Font", "Symbols Nerd Font", sans-serif;
+  font-family: "JetBrainsMono Nerd Font Propo", "Symbols Nerd Font", sans-serif;
   font-weight: 600;
   font-size: 12px;
 }
@@ -294,10 +294,10 @@ window#waybar > box {
 /* ─────────────────────────────────────────────────────────────────────────────
    NETWORK
    ───────────────────────────────────────────────────────────────────────────── */
-#custom-net-speed {
-  padding: 0px 12px 0px 8px;
-  margin: 1px 8px;
-  border-radius: 10px;
+#network {
+  padding: 0px 8px 0px 12px;
+  margin: 5px 2px;
+  border-radius: 8px;
   background-color: alpha(@surface_container, 0.6);
   color: @tertiary;
   font-size: 10px;
@@ -308,7 +308,7 @@ window#waybar > box {
    ───────────────────────────────────────────────────────────────────────────── */
 
 #bluetooth {
-  padding: 0px 8px 0px 8px;
+  padding: 0px 0px 0px 8px;
   margin: 5px 2px;
   background-color: alpha(@surface_container, 0.2);
   border-radius: 8px;
