@@ -2,5 +2,6 @@ com.brave.Browser
 com.dropbox.Client
 com.github.tchx84.Flatseal
 com.usebottles.bottles
+com.warlordsoftwares.youtube-downloader-4ktube
 org.bleachbit.BleachBit
 org.localsend.localsend_app

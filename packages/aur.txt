@@ -1,5 +1,6 @@
 adwaita-qt5
 adwaita-qt6
+auto-cpufreq
 fluent-icon-theme-git
 hyprshade
 lazygit-git
@@ -7,8 +8,6 @@ libpamac-full
 otf-atkinson-hyperlegible-next
 pamac-all
 pamac-cli
-paru
-paru-debug
 peaclock
 python-imageio-ffmpeg
 python-pywalfox
@@ -24,5 +23,3 @@ wf-recorder-gui
 wifitui
 wlogout
 xdg-terminal-exec
-yay
-yay-debug

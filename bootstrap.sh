@@ -5,23 +5,44 @@
 # Mode   : Non-interactive, idempotent
 # Usage  : bash bootstrap.sh
 # ==============================================================================
+#
+# What this script does, in order:
+#   1.  Preflight checks
+#   2.  Full system upgrade (pacman -Syu)
+#   3.  Install pacman packages from packages/pacman.txt
+#   4.  Build yay from source + verify
+#   5.  Install AUR packages from packages/aur.txt
+#   6.  Install Flatpak + apps from packages/flatpak.txt
+#   7.  Clone dotfiles repo
+#   8.  Deploy configs (rsync repo/configs/ → ~/.config/)
+#   9.  Create required directories
+#   10. Change default shell to zsh
+#   11. Enable system services
+#   12. Enable user services
+#   13. Enable SDDM
+#   14. Seed wallpaper + generate matugen colour scheme
+#   15. Sync Neovim plugins
+#   16. Final summary
+#
+# ==============================================================================
 
 set -euo pipefail
 
 # ------------------------------------------------------------------------------
-# CONFIGURATION
+# CONFIGURATION — edit these before running
 # ------------------------------------------------------------------------------
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # repo root
-CONFIG_SRC="$DOTFILES_DIR/configs"
-SCRIPTS_DIR="$DOTFILES_DIR/user_scripts/install"
+DOTFILES_REPO="https://github.com/YOURUSERNAME/YOURREPO.git"   # ← replace
+DOTFILES_DIR="$HOME/shoonya-dotfiles"                          # clone target
+
 PKG_DIR="$DOTFILES_DIR/packages"
+CONFIG_SRC="$DOTFILES_DIR/configs"      # repo/configs/ → ~/.config/
 
 REAL_USER="${USER}"
 REAL_HOME="${HOME}"
 XDG_CONFIG="$REAL_HOME/.config"
 
-DEFAULT_WALLPAPER="$CONFIG_SRC/wallpapers/default.png"
+DEFAULT_WALLPAPER="$REAL_HOME/Pictures/Wallpapers/default.png"
 
 # ------------------------------------------------------------------------------
 # OUTPUT HELPERS
@@ -35,140 +56,116 @@ info()    { echo -e "${CYAN}${BOLD}[INFO]${RESET}  $*"; }
 ok()      { echo -e "${GREEN}${BOLD}[OK]${RESET}    $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}[WARN]${RESET}  $*"; }
 die()     { echo -e "${RED}${BOLD}[ERROR]${RESET} $*" >&2; exit 1; }
-step()    { echo ""; echo -e "${BOLD}── $* ${RESET}"; }
+step()    { echo ""; echo -e "${BOLD}━━  $*${RESET}"; }
 divider() { echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"; }
 
-run_script() {
-    local script="$SCRIPTS_DIR/$1"
-    shift
-    if [[ -x "$script" ]]; then
-        bash "$script" "$@"
-    else
-        warn "Script not found or not executable, skipping: $script"
-    fi
-}
-
 # ------------------------------------------------------------------------------
-# PREFLIGHT
+# STEP 0 — Preflight
 # ------------------------------------------------------------------------------
 
 preflight() {
     divider
     echo -e "${BOLD}  SHOONYA — Post-Install Bootstrap${RESET}"
-    echo -e "  User: ${CYAN}$REAL_USER${RESET}  |  Home: ${CYAN}$REAL_HOME${RESET}"
+    echo -e "  User : ${CYAN}$REAL_USER${RESET}"
+    echo -e "  Home : ${CYAN}$REAL_HOME${RESET}"
+    echo -e "  Repo : ${CYAN}$DOTFILES_REPO${RESET}"
     divider
     echo ""
 
     [[ $EUID -eq 0 ]]          && die "Do NOT run as root. Run: bash bootstrap.sh"
     [[ -f /etc/arch-release ]] || die "This script targets Arch Linux only."
-    command -v sudo &>/dev/null || die "sudo not found."
+    command -v sudo &>/dev/null || die "sudo not found. Install sudo first."
     sudo -v                    || die "Cannot obtain sudo — check sudoers."
+    command -v git &>/dev/null || die "git not found. Install git first."
 
     ok "Preflight passed"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 1 — Pacman Packages
+# STEP 1 — Full system upgrade + pacman packages
 # ------------------------------------------------------------------------------
 
 install_pacman_packages() {
-    step "Pacman Packages"
+    step "Pacman — Full upgrade + package install"
 
     local pkg_file="$PKG_DIR/pacman.txt"
     [[ -f "$pkg_file" ]] || die "Missing package list: $pkg_file"
 
-    # Full system upgrade first — this ensures libalpm is at its final version
-    # before we attempt to build anything against it (e.g. yay from source).
-    # Running -Syu before -S also prevents partial-upgrade breakage.
     info "Full system upgrade (pacman -Syu)..."
     sudo pacman -Syu --noconfirm
 
+    # Ensure rsync is present before deploy_configs() needs it.
+    # --needed makes this a no-op if already installed.
+    info "Ensuring rsync and base-devel are present..."
+    sudo pacman -S --needed --noconfirm rsync base-devel
+
     info "Installing pacman packages from pacman.txt..."
-    sudo pacman -S --noconfirm --needed - < "$pkg_file"
+    sudo pacman -S --needed --noconfirm - < "$pkg_file"
 
-    # Ensure rsync is present — deploy_configs() depends on it and it is not
-    # guaranteed to be in every pacman.txt.
-    info "Ensuring rsync is installed..."
-    sudo pacman -S --needed --noconfirm rsync
-
-    # Refresh bash's command hash table so any upgraded/newly installed
-    # binaries (pacman, makepkg, etc.) are resolved from their current paths.
+    # Refresh bash command hash so all newly installed binaries are visible.
     hash -r
 
     ok "Pacman packages done"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 2 — AUR Helper (yay)
+# STEP 2 — AUR helper (yay, built from source)
 # ------------------------------------------------------------------------------
 
-# Global flag — install_aur_packages() reads this to decide whether to proceed.
+# Global flag read by install_aur_packages().
 YAY_OK=0
 
 install_yay() {
-    step "AUR Helper (yay)"
+    step "AUR Helper — yay (build from source)"
 
-    # base-devel and git are required to compile any AUR package.
-    # Install them unconditionally — pacman --needed makes this a no-op
-    # if they are already present.
-    info "Ensuring base-devel and git are installed..."
-    sudo pacman -S --needed --noconfirm base-devel git
-
-    # If yay is already present, verify it actually links correctly against
-    # the current libalpm before trusting it.  A binary built against an older
-    # libalpm soname will be found by `command -v` but will fail to run.
+    # If yay is already present, verify it actually links against the current
+    # libalpm. A binary built before a libalpm soname bump will be found by
+    # command -v but will segfault or refuse to run.
     if command -v yay &>/dev/null; then
         if yay --version &>/dev/null; then
             ok "yay already installed and functional"
             YAY_OK=1
             return
         else
-            warn "yay is installed but failed to run (likely libalpm soname mismatch)."
-            warn "Rebuilding yay from source to match the current libalpm..."
+            warn "yay found but failed to run — libalpm soname mismatch likely."
+            warn "Rebuilding yay from source..."
         fi
     else
         info "yay not found — building from source..."
     fi
 
-    # Build yay from source so makepkg compiles it against the libalpm version
-    # that is currently installed, regardless of any recent soname bump.
     local tmp
     tmp="$(mktemp -d)"
 
     git clone --depth=1 https://aur.archlinux.org/yay.git "$tmp/yay" \
-        || { warn "Failed to clone yay from AUR — AUR packages will be skipped."; rm -rf "$tmp"; return; }
+        || { warn "Failed to clone yay — AUR packages will be skipped."; rm -rf "$tmp"; return; }
 
     (
         cd "$tmp/yay"
         makepkg -si --noconfirm
-    ) || { warn "makepkg failed building yay — AUR packages will be skipped."; rm -rf "$tmp"; return; }
+    ) || { warn "makepkg failed for yay — AUR packages will be skipped."; rm -rf "$tmp"; return; }
 
     rm -rf "$tmp"
 
-    # Refresh path cache so the newly built binary is immediately visible.
+    # Refresh path cache so the freshly installed binary is found immediately.
     hash -r
 
-    # Final verification — confirm the binary is on PATH and actually executes.
-    # Both checks are required: command -v confirms PATH visibility, yay --version
-    # confirms the binary loads and links correctly against the current libalpm.
+    # Verify: must both exist on PATH and actually execute cleanly.
     if command -v yay &>/dev/null && yay --version &>/dev/null; then
         ok "yay built and verified"
         YAY_OK=1
     else
-        warn "yay was built but could not run — AUR packages will be skipped."
+        warn "yay binary unresponsive after build — AUR packages will be skipped."
     fi
 }
 
 # ------------------------------------------------------------------------------
-# STEP 3 — AUR Packages
+# STEP 3 — AUR packages
 # ------------------------------------------------------------------------------
 
 install_aur_packages() {
     step "AUR Packages"
 
-    # Respect the flag set by install_yay().
-    # If yay could not be built or verified, skip AUR entirely rather than
-    # letting `yay -S` crash the whole bootstrap.
     if [[ "$YAY_OK" -ne 1 ]]; then
         warn "Skipping AUR packages — yay is not available."
         return
@@ -181,8 +178,10 @@ install_aur_packages() {
     fi
 
     info "Installing AUR packages from aur.txt..."
+    # || warn keeps set -e from aborting the entire bootstrap if one package
+    # fails (e.g. a package is renamed or temporarily unavailable in the AUR).
     yay -S --needed --noconfirm - < "$pkg_file" \
-        || warn "One or more AUR packages failed to install"
+        || warn "One or more AUR packages failed — continuing"
 
     ok "AUR packages done"
 }
@@ -200,46 +199,67 @@ install_flatpak_apps() {
         return
     fi
 
+    # flatpak itself is in pacman.txt, but guard anyway.
     if ! command -v flatpak &>/dev/null; then
         info "Installing flatpak..."
-        sudo pacman -S --noconfirm --needed flatpak
+        sudo pacman -S --needed --noconfirm flatpak
     fi
 
+    info "Adding Flathub remote..."
     flatpak remote-add --if-not-exists flathub \
         https://dl.flathub.org/repo/flathub.flatpakrepo
 
     info "Installing Flatpak apps from flatpak.txt..."
     mapfile -t apps < "$pkg_file"
-    flatpak install -y flathub "${apps[@]}"
+    flatpak install -y flathub "${apps[@]}" \
+        || warn "One or more Flatpak apps failed — continuing"
 
     ok "Flatpak apps done"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 5 — Deploy Configs (rsync, non-destructive)
+# STEP 5 — Clone dotfiles
+# ------------------------------------------------------------------------------
+
+clone_dotfiles() {
+    step "Clone Dotfiles"
+
+    if [[ -d "$DOTFILES_DIR/.git" ]]; then
+        info "Repo already cloned — pulling latest..."
+        git -C "$DOTFILES_DIR" pull --ff-only \
+            || warn "git pull failed — local changes may exist, continuing with current state"
+        ok "Dotfiles up to date"
+        return
+    fi
+
+    info "Cloning $DOTFILES_REPO → $DOTFILES_DIR ..."
+    git clone --depth=1 "$DOTFILES_REPO" "$DOTFILES_DIR" \
+        || die "Failed to clone dotfiles repo. Check the URL and your network."
+
+    ok "Dotfiles cloned"
+}
+
+# ------------------------------------------------------------------------------
+# STEP 6 — Deploy configs
 # ------------------------------------------------------------------------------
 
 deploy_configs() {
-    step "Deploy Configs"
+    step "Deploy Configs (rsync)"
 
     [[ -d "$CONFIG_SRC" ]] || die "Config source not found: $CONFIG_SRC"
 
     mkdir -p "$XDG_CONFIG"
-    info "Syncing configs/ → ~/.config/ ..."
-    rsync -a --backup --suffix=".bak" "$CONFIG_SRC/" "$XDG_CONFIG/"
 
-    if [[ -d "$DOTFILES_DIR/scripts" ]]; then
-        mkdir -p "$REAL_HOME/.local/bin"
-        rsync -a "$DOTFILES_DIR/scripts/" "$REAL_HOME/.local/bin/"
-        chmod +x "$REAL_HOME/.local/bin/"* 2>/dev/null || true
-        info "Scripts deployed → ~/.local/bin"
-    fi
+    info "Syncing $CONFIG_SRC/ → $XDG_CONFIG/ ..."
+    # --backup preserves any file the rsync would overwrite, suffixed .bak.
+    # This means re-runs are safe and nothing is silently destroyed.
+    rsync -a --backup --suffix=".bak" "$CONFIG_SRC/" "$XDG_CONFIG/"
 
     ok "Configs deployed"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 6 — Required Directories
+# STEP 7 — Required directories
 # ------------------------------------------------------------------------------
 
 create_directories() {
@@ -251,80 +271,193 @@ create_directories() {
         "$REAL_HOME/.local/bin"
         "$REAL_HOME/.local/share"
         "$REAL_HOME/.cache/shoonya"
+        # Matugen expects these to exist before first run
+        "$XDG_CONFIG/matugen"
+        "$XDG_CONFIG/matugen/colors"
     )
 
     for d in "${dirs[@]}"; do
-        mkdir -p "$d" && info "Ready: $d"
+        mkdir -p "$d"
+        info "Ready: $d"
     done
-
-    # Matugen-specific directories (if script exists)
-    run_script "021_matugen_directories.sh"
 
     ok "Directories ready"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 7 — Qt Theme
+# STEP 8 — Change default shell to zsh
 # ------------------------------------------------------------------------------
 
-apply_qt_config() {
-    step "Qt Theme Config"
-    run_script "025_qtct_config.sh"
-    ok "Qt config applied"
-}
+set_default_shell() {
+    step "Default Shell → zsh"
 
-# ------------------------------------------------------------------------------
-# STEP 8 — Wallpaper Seed + Matugen Color Scheme (CRITICAL)
-# ------------------------------------------------------------------------------
+    local zsh_path
+    zsh_path="$(command -v zsh 2>/dev/null || true)"
 
-seed_theme() {
-    step "Wallpaper + Initial Color Scheme"
-
-    if [[ ! -f "$DEFAULT_WALLPAPER" ]]; then
-        warn "No default wallpaper found at $DEFAULT_WALLPAPER — skipping seed"
+    if [[ -z "$zsh_path" ]]; then
+        warn "zsh not found on PATH — shell change skipped"
         return
     fi
 
-    cp -f "$DEFAULT_WALLPAPER" "$REAL_HOME/Pictures/Wallpapers/default.png"
-    info "Default wallpaper copied"
-
-    # Start swww daemon if not running
-    if ! pgrep -x swww-daemon &>/dev/null; then
-        info "Starting swww-daemon..."
-        swww-daemon &
-        sleep 1
+    if [[ "$SHELL" == "$zsh_path" ]]; then
+        ok "zsh is already the default shell"
+        return
     fi
 
-    swww img "$REAL_HOME/Pictures/Wallpapers/default.png" \
-        || warn "swww img failed — continuing anyway"
+    # Ensure zsh is listed in /etc/shells (required by chsh).
+    if ! grep -qxF "$zsh_path" /etc/shells; then
+        info "Adding $zsh_path to /etc/shells..."
+        echo "$zsh_path" | sudo tee -a /etc/shells > /dev/null
+    fi
 
-    run_script "086_generate_colorfiles_for_current_wallpaper.sh"
+    info "Changing shell to zsh for $REAL_USER..."
+    chsh -s "$zsh_path" "$REAL_USER" \
+        || warn "chsh failed — change shell manually with: chsh -s $zsh_path"
 
-    ok "Initial theme seeded"
+    ok "Default shell set to zsh (takes effect on next login)"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 9 — System Services
+# STEP 9 — System services
 # ------------------------------------------------------------------------------
 
 enable_system_services() {
     step "System Services"
-    run_script "050_system_services.sh"
-    ok "System services configured"
+
+    # These match the services confirmed enabled on the live Shoonya system.
+    # getty@.service is a template unit managed by systemd — skip it here.
+    local services=(
+        acpid.service
+        auto-cpufreq.service
+        bluetooth.service
+        cups.service
+        firewalld.service
+        grub-btrfsd.service
+        libvirtd.service
+        NetworkManager.service
+        NetworkManager-dispatcher.service
+        NetworkManager-wait-online.service
+        snapd.service
+        sshd.service
+        swayosd-libinput-backend.service
+        systemd-resolved.service
+        systemd-timesyncd.service
+        thermald.service
+        udisks2.service
+        vsftpd.service
+    )
+
+    for svc in "${services[@]}"; do
+        if systemctl is-enabled --quiet "$svc" 2>/dev/null; then
+            info "Already enabled: $svc"
+        else
+            info "Enabling: $svc"
+            sudo systemctl enable --now "$svc" \
+                || warn "Failed to enable $svc — continuing"
+        fi
+    done
+
+    ok "System services done"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 10 — User Services
+# STEP 10 — User services
 # ------------------------------------------------------------------------------
 
 enable_user_services() {
     step "User Services"
-    run_script "006_enabling_user_services.sh"
-    ok "User services configured"
+
+    local services=(
+        fumon.service
+        gnome-keyring-daemon.service
+        hyprpolkitagent.service
+        network_meter.service
+        wireplumber.service
+        xdg-user-dirs.service
+    )
+
+    for svc in "${services[@]}"; do
+        if systemctl --user is-enabled --quiet "$svc" 2>/dev/null; then
+            info "Already enabled: $svc"
+        else
+            info "Enabling (user): $svc"
+            systemctl --user enable --now "$svc" \
+                || warn "Failed to enable user service $svc — continuing"
+        fi
+    done
+
+    ok "User services done"
 }
 
 # ------------------------------------------------------------------------------
-# STEP 11 — Neovim Plugin Sync
+# STEP 11 — SDDM
+# ------------------------------------------------------------------------------
+
+enable_sddm() {
+    step "SDDM Display Manager"
+
+    if ! command -v sddm &>/dev/null; then
+        warn "sddm binary not found — skipping (is sddm in pacman.txt?)"
+        return
+    fi
+
+    if systemctl is-enabled --quiet sddm.service 2>/dev/null; then
+        ok "sddm.service already enabled"
+        return
+    fi
+
+    info "Enabling sddm.service..."
+    sudo systemctl enable sddm.service \
+        || warn "Failed to enable sddm.service"
+
+    ok "SDDM enabled (active on next boot)"
+}
+
+# ------------------------------------------------------------------------------
+# STEP 12 — Wallpaper seed + matugen colour scheme
+# ------------------------------------------------------------------------------
+
+seed_theme() {
+    step "Wallpaper + Matugen Colour Scheme"
+
+    # Copy the default wallpaper from the repo into the expected location.
+    local repo_wallpaper="$CONFIG_SRC/wallpapers/default.png"
+    if [[ ! -f "$repo_wallpaper" ]]; then
+        warn "No default wallpaper at $repo_wallpaper — skipping theme seed"
+        return
+    fi
+
+    cp -f "$repo_wallpaper" "$DEFAULT_WALLPAPER"
+    info "Default wallpaper copied → $DEFAULT_WALLPAPER"
+
+    # swww requires a running Wayland compositor. On a fresh TTY install this
+    # will not be available, so we attempt it but never abort on failure.
+    if command -v swww &>/dev/null; then
+        if ! pgrep -x swww-daemon &>/dev/null; then
+            info "Starting swww-daemon..."
+            swww-daemon &
+            sleep 1
+        fi
+        swww img "$DEFAULT_WALLPAPER" \
+            || warn "swww img failed — no compositor running yet (normal on first install)"
+    else
+        warn "swww not found — wallpaper will be applied on first Hyprland launch"
+    fi
+
+    # Generate matugen colour files from the wallpaper.
+    if command -v matugen &>/dev/null; then
+        info "Generating matugen colour scheme..."
+        matugen image "$DEFAULT_WALLPAPER" \
+            || warn "matugen failed — run manually after first login"
+    else
+        warn "matugen not found — colour scheme generation skipped"
+    fi
+
+    ok "Theme seed done"
+}
+
+# ------------------------------------------------------------------------------
+# STEP 13 — Neovim plugin sync
 # ------------------------------------------------------------------------------
 
 sync_neovim() {
@@ -335,34 +468,13 @@ sync_neovim() {
         return
     fi
 
-    run_script "047_neovim_lazy_sync.sh"
+    info "Running Lazy sync (headless)..."
+    # --headless runs nvim without a UI.
+    # +qa closes nvim once the sync command completes.
+    nvim --headless "+Lazy! sync" +qa 2>/dev/null \
+        || warn "Neovim Lazy sync failed — run :Lazy sync manually on first launch"
+
     ok "Neovim plugins synced"
-}
-
-# ------------------------------------------------------------------------------
-# STEP 12 — Git Configuration
-# ------------------------------------------------------------------------------
-
-configure_git() {
-    step "Git Configuration"
-    run_script "052_git_config.sh"
-    ok "Git configured"
-}
-
-# ------------------------------------------------------------------------------
-# STEP 13 — SDDM Setup
-# ------------------------------------------------------------------------------
-
-configure_sddm() {
-    step "SDDM Display Manager"
-
-    if ! command -v sddm &>/dev/null; then
-        warn "sddm not installed — skipping"
-        return
-    fi
-
-    run_script "091_sddm_setup.sh" --auto
-    ok "SDDM configured"
 }
 
 # ------------------------------------------------------------------------------
@@ -384,12 +496,15 @@ final_summary() {
     echo ""
     echo -e "  ${GREEN}${BOLD}Bootstrap complete.${RESET}"
     echo ""
-    echo -e "  ${BOLD}Config deployed to:${RESET}  ~/.config"
-    echo -e "  ${BOLD}Scripts at:${RESET}         ~/.local/bin"
-    echo -e "  ${BOLD}Wallpapers at:${RESET}      ~/Pictures/Wallpapers"
+    echo -e "  ${BOLD}Dotfiles cloned to:${RESET}  $DOTFILES_DIR"
+    echo -e "  ${BOLD}Configs deployed:${RESET}    $XDG_CONFIG"
+    echo -e "  ${BOLD}Wallpaper:${RESET}           $DEFAULT_WALLPAPER"
     echo ""
-    echo -e "  ${CYAN}Next:${RESET}  Reboot → select Hyprland at SDDM"
-    echo -e "         Or from TTY: ${BOLD}Hyprland${RESET}"
+    echo -e "  ${CYAN}${BOLD}Next steps:${RESET}"
+    echo -e "   1. Reboot the system"
+    echo -e "   2. SDDM will start — select Hyprland"
+    echo -e "   3. Log in — matugen and swww will apply on first launch"
+    echo -e "   4. If shell did not change: run ${BOLD}chsh -s \$(which zsh)${RESET}"
     echo ""
     divider
     echo ""
@@ -402,19 +517,19 @@ final_summary() {
 main() {
     preflight
 
-    install_pacman_packages   # 1
-    install_yay               # 2
-    install_aur_packages      # 3
-    install_flatpak_apps      # 4
-    deploy_configs            # 5
-    create_directories        # 6
-    apply_qt_config           # 7
-    seed_theme                # 8  ← matugen color seed (critical)
-    enable_system_services    # 9
-    enable_user_services      # 10
-    sync_neovim               # 11
-    configure_git             # 12
-    configure_sddm            # 13
+    clone_dotfiles              #  5 — clone first so PKG_DIR and CONFIG_SRC exist
+    install_pacman_packages     #  1
+    install_yay                 #  2
+    install_aur_packages        #  3
+    install_flatpak_apps        #  4
+    deploy_configs              #  6
+    create_directories          #  7
+    set_default_shell           #  8
+    enable_system_services      #  9
+    enable_user_services        # 10
+    enable_sddm                 # 11
+    seed_theme                  # 12
+    sync_neovim                 # 13
 
     final_summary
 }
