@@ -147,7 +147,7 @@
 
   "pulseaudio": {
     "format": "{icon}",
-    "on-click": "uwsm-app -- kitty --class pavucontrol -e pavucontrol",
+    "on-click": "pavucontrol",
     // "on-click-right": "pamixer -t",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,

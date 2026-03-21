@@ -10,7 +10,8 @@ set -uo pipefail
 readonly SCRIPTS_DIR="${HOME}/user_scripts"
 readonly HYPR_CONF="${HOME}/.config/hypr"
 readonly HYPR_SOURCE="${HYPR_CONF}/source"
-readonly SEARCH_DIR="${HOME}/Documents/pensive/linux"
+# readonly SEARCH_DIR="${HOME}/Documents/pensive/linux"
+readonly SEARCH_DIR="${HOME}/Dropbox"
 
 readonly TERMINAL="kitty"
 readonly EDITOR="${EDITOR:-nvim}"
@@ -92,7 +93,7 @@ route_selection() {
         # *install*)     show_install_menu ;;
         # *remove*)      show_remove_menu ;;
         *utils*)       show_utils_menu ;;
-        *ai*)          show_ai_menu ;;
+        # *ai*)          show_ai_menu ;;
         *visuals*)     show_visuals_menu ;;
         # *system*)      show_system_menu ;;
         # *performance*) show_performance_menu ;;
@@ -234,8 +235,8 @@ show_utils_menu() {
     choice=$(menu "Utils" "󰖩  Wi-Fi (TUI)\n󰂯  Bluetooth\n󰕾  Audio Mixer\n󰞅  Emoji Picker\n  Screenshot (Swappy)\n󰅇  Clipboard Persistence\n󰍽  Mouse Handedness\n󰌌  Wayclick (Key Sounds)")
 
     case "${choice,,}" in
-        *wi-fi*)       run_term "impala" impala ;;
-        *bluetooth*)   run_term "bluetui" bluetui ;;
+        *wi-fi*)       run_term "wifitui" wifitui ;;
+        *bluetooth*)   run_term "blueman-manager" blueman-manager ;;
         *audio*)       run_app pavucontrol ;;
         *emoji*)       run_app "$SCRIPTS_DIR/rofi/emoji.sh" ;;
         *screenshot*)

@@ -136,7 +136,7 @@
     // "oclick": "blueberry"
   },
 
-  "pulseaudio#output": {
+  "pulseaudiow": {
     "format": "{icon} {volume}%",
     "format-muted": "󰖁",
     "format-bluetooth": "󰂰 {volume}%",
@@ -150,7 +150,7 @@
       "car": "",
       "default": ["󰕿", "󰖀", "󰕾"]
     },
-    "on-click": "uwsm-app -- pavucontrol",
+    "on-click": "pavucontrol",
     // "on-click-right": "uwsm-app -- kitty --class cava -e cava",
     // "on-click-middle": "swayosd-client --output-volume mute-toggle",
     "on-scroll-up": "swayosd-client --output-volume raise",

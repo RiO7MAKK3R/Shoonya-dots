@@ -1,14 +1,38 @@
 /* @import "../omarchy/current/theme/waybar.css"; */
 @import url("../../.config/matugen/generated/waybar-colors.css");
 
+/* * COLOR MAPPING 
+ * Connecting Matugen variables to the theme's logic 
+ */
+@define-color background @surface;
+@define-color foreground @on_surface;
+
+/* Mapping pywal indices to Matugen roles for consistent theming */
+@define-color color1 @primary;
+@define-color color2 @tertiary;
+@define-color color3 @secondary;
+@define-color color4 @error;
+@define-color color5 @primary_container;
+@define-color color6 @on_primary;
+
+/* --- MILD COLORS --- */
+@define-color primary-mild @primary_container;
+@define-color secondary-mild @secondary_container;
+@define-color tertiary-mild @tertiary_container;
+@define-color error-mild @error_container;
+
+/* --- ELEVATED SURFACE FOR VISUAL DEPTH --- */
+@define-color surface-elevated @surface_container_high;
+
+
 * {
   color: @foreground;
-  border: none;
+  border: @on_primary;
   border-radius: 0;
   min-height: 0;
   font-family: "JetBrainsMono Nerd Font Propo", monospace;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 window#waybar {
@@ -65,9 +89,10 @@ mpris#waybar.empty #mpris {
 #custom-launcher,
 #workspaces,
 #tray-expander {
-  background-color: rgba(10, 7, 22, 0.55); /* translucent backdrop */
-  color: @foreground;
-  border: 1.5px solid rgba(255, 255, 255, 0.9); /* clean white border */
+  /* background-color: rgba(10, 7, 22, 0.55); translucent backdrop */
+  color: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid @primary; /* primary border */
+  /* border: alpha(@secondary, 0.6); */
   border-radius: 10px; /* same rounding as original */
   padding: 0 10px; /* exactly like your base config */
   margin: 5px 2px; /* same spacing */

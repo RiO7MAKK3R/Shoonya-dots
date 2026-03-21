@@ -32,7 +32,7 @@ readonly TRACK_LIGHT="${STATE_DIR}/light_wal"
 readonly TRACK_DARK="${STATE_DIR}/dark_wal"
 readonly BASE_PICTURES="${HOME}/Pictures"
 readonly WALLPAPER_ROOT="${BASE_PICTURES}/wallpapers"
-readonly ACTIVE_THEME_DIR="${WALLPAPER_ROOT}/wallpapers"
+readonly ACTIVE_THEME_DIR="${WALLPAPER_ROOT}/active_theme"
 readonly DEFAULT_MODE="dark"
 readonly DEFAULT_TYPE="scheme-tonal-spot"
 readonly DEFAULT_CONTRAST="0"
@@ -368,15 +368,17 @@ generate_colors() {
 
     log "Matugen: Mode=[${THEME_MODE}] Type=[${MATUGEN_TYPE}] Contrast=[${MATUGEN_CONTRAST}]"
 
-    local -a cmd=(matugen image "$img" \
-        --mode "$THEME_MODE" \
-        --source-color-index 0)
-
+    local -a cmd=(matugen --mode "$THEME_MODE")
     [[ "$MATUGEN_TYPE" != "disable" ]]     && cmd+=(--type "$MATUGEN_TYPE")
     [[ "$MATUGEN_CONTRAST" != "disable" ]] && cmd+=(--contrast "$MATUGEN_CONTRAST")
+    cmd+=(image "$img")
 
     "${cmd[@]}" || die "Matugen generation failed"
+
+    command -v gsettings &>/dev/null && \
+        gsettings set org.gnome.desktop.interface color-scheme "prefer-${THEME_MODE}" 2>/dev/null || true
 }
+
 # --- CLI HANDLER ---
 
 usage() {

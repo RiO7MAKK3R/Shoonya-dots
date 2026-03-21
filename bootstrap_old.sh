@@ -517,15 +517,15 @@ final_summary() {
 main() {
     preflight
 
-    clone_dotfiles              #  1 — clone first so PKG_DIR and CONFIG_SRC exist
-    install_pacman_packages     #  2
-    install_yay                 #  3
-    install_aur_packages        #  4 — AUR must finish before services; snapd,
-    install_flatpak_apps        #  5   grub-btrfsd + swayosd unit files live in AUR
-    deploy_configs              #  6   packages and wont exist on disk until here
+    clone_dotfiles              #  5 — clone first so PKG_DIR and CONFIG_SRC exist
+    install_pacman_packages     #  1
+    install_yay                 #  2
+    install_aur_packages        #  3
+    install_flatpak_apps        #  4
+    deploy_configs              #  6
     create_directories          #  7
     set_default_shell           #  8
-    enable_system_services      #  9 — safe now: all unit files are on disk
+    enable_system_services      #  9
     enable_user_services        # 10
     enable_sddm                 # 11
     seed_theme                  # 12

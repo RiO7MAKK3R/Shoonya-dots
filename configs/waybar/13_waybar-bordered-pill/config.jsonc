@@ -94,7 +94,7 @@
   "cpu": {
     "interval": 5,
     "format": "󰍛",
-    "on-click": "alacritty -e btop"
+    "on-click": "uwsm-app -- kitty --class btop -e btop"
   },
   "clock": {
     "format": "{:%I:%M %p}",
@@ -145,8 +145,8 @@
   },
   "pulseaudio": {
     "format": "{icon}",
-    "on-click": "alacritty --class=Wiremix -e wiremix",
-    "on-click-right": "pamixer -t",
+    "on-click": "pavucontrol",
+    // "on-click-right": "pamixer -t",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,
     "format-muted": "󰝟",
@@ -163,7 +163,6 @@
     "modules": [
       "custom/expand-icon",
       "tray",
-      "memory"
     ]
   },
   "custom/expand-icon": {
@@ -173,11 +172,6 @@
   "tray": {
     "icon-size": 12,
     "spacing": 12
-  },
-  "memory": { 
-    "format": " {used:0.1f}gb",
-    "interval": 2,
-    "on-click": "alacritty -e btop"
   },
   "mpris": {
     "format": "{player_icon} {artist} - {title}",

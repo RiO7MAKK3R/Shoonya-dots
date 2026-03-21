@@ -41,4 +41,5 @@ check_dependencies() {
 
 check_dependencies
 
-hyprshot -m output --raw | satty --filename - --output-filename -
+# hyprshot -m output --raw | satty --filename - --output-filename -
+hyprshot -m output --raw | satty --filename - --output-filename "$HOME/Pictures/screenshot-$(date +'%Y-%m-%d_%H-%M-%S').png"
